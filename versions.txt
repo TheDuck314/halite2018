@@ -1,0 +1,51 @@
+v14 5_zeta
+final rank=6 mu=76.42 sigma=0.30 at 20181027 6:50pm
+
+v15 6_eta
+final rank=8 mu=77.25 sigma=0.74 at 20181027 10:28pm
+smarter pathing with priorities
+first pass at proactive dropoffs
+
+v16 7_theta
+final rank=4 mu=about 81 sigma=about 0.7 at 20181028 02:10am
+very small update:
+ - stupid ramming in 1v1s when enemy ship halite > my ship halite. this probably doesn't help
+ - small tweak to mining target selection which produced like 99% winrate against 6_eta
+
+v17 8_iota
+final   rank=4 μ=79.91 σ=0.43 at 20181028 8:05pm
+again a small update. these are only for two player games:
+ - consider_ramming() doesn't ram an enemy unless there are 2 allies closer than the closest other enemy
+ - pathing and mining consider enemies and adjacent squares passable if there are 3 allies closer than the 2nd closest enemy to that square
+80% winrate against 7_theta in 2 player games
+4 player should be unaffected
+
+v18 9_kappa
+final rank=3 μ=83.99 σ=0.89 at 20181028 10:14pm
+another small update
+- the logic that compares current-square halite and mining-tgt halite to decide whether to actually move accounts for inspiration
+  this gave 95%+ winrate against Iota
+- tiny bugfix where the thing generating the final collapse commands didn't account for not being able to move due to halite
+I don't think anything else really changed
+Note: I backported the 3 * here_eff_halite change to the local 9_kappa code, but it ran live with the older 5 *
+
+v19 I think v19 was an accidentally reupload of v18
+final rank was like μ=82.92 sigma=1.1
+
+v20 10_lambda
+final rank=2 μ=85.87 sigma=about 0.5
+another small update
+- condition for moving toward mining target is (tgt_eff_halite > 3 * here_eff_halite), down from 5 *. Tested well (but not like 99% winrate) against Kappa.
+- possibly build ships until 140 turns left instead of 200 in 2p. Neutral in tests, but I've been stopping too early in live on big maps.
+
+v21 10_lambda again
+final rank=1 μ=86.72 σ=0.40 at 20181031 10:47pm
+- when pathing, miners don't avoid returners whose dest square is more than 1 square away from the miner. not sure this really matters
+- shift threshold to build dropoffs from 20 ships to 17 since I think I'm not building fast enough in live. this is
+  clearly a bit better (like 75% winrate 2p, 40% 1st place 4p) against Kappa, but this is expected b/c of the avoid-enemy-structures
+  logic in dropoff placement
+
+v22 11_mu
+- one thing I'm including even though self-play doesn't care: mild distance penalty for dropoffs, to discourage a really terrible one I saw in live
+- rudimentary code for fleeing adjacent enemies in 2p games when we feel threatened. gives 90% winrate against Lambda. This is probably inflated since
+  Mu's "should I flee" code is exactly the same as Lambda's "should I attack" code.

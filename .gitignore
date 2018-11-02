@@ -1,0 +1,16 @@
+commdump.log
+matchrunner/clean_matches.sh
+matchrunner/log_cleaner.sh
+matchrunner/matches/
+livestats/example.json
+bots/*/build/
+bots/*/clean_replays.sh
+bots/*/make_and_run.sh
+bots/*/replays/
+bots/*/upload.zip
+bots/*/zip_upload.sh
+bots/*/.vscode/
+bots/0_starterbotcpp/MyBot
+bots/0_starterbotcpp/*.o
+bots/*/hlt/__pycache__/
+

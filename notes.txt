@@ -1,0 +1,190 @@
+- maybe need some repulsion in mining targets
+
+dropoff distance penalty may be too heavy handed
+
+need smarter combat
+
+need some hysteresis in dropoff location choice
+
+probably want to lightly reward closer dropoff locations since our ships will get there faster
+
+in addition to not building so far away, we also need to not be so scared of recent enemy dropoffs
+https://halite.io/play/?game_id=1166131&replay_class=1&replay_name=replay-20181030-074422%2B0000-1540884547-64-64-1166131
+
+in 2p there's probably a lot of value in grouping -- at least, our low-halite ships
+should be attracted to wherever the action is
+
+consider tuning the parameter of when to stop making ships
+
+some sort of macro to make it easy to extra the tunable constants would be sweet
+
+1v1 combat has a ton of possibilities. I think it's all about ganging up on smaller groups of enemys and carting away their halite
+
+LATE NIGHT ME THINGS 1V1 COMBAT IS SUPER IMPORTANT AND HAS SOME EASY GAINS:
+  - prefer to group up
+  - flee if you're outnumbered
+
+consider tuning the min nearby halite to make a dropoff / min dist between dropoffs
+
+lategame 4p ramming could be op, if you only do it when you're the only one nearby
+
+in 4p, at the end, we can ram empty ships into whichever player is closest ahead of us (or closest behind us if we're winning)
+
+I'm probably not building enough dropoffs on big 2p maps with a lot of halite
+
+near game end, don't pick mining targets outside the collapsing lightcone of our structures
+
+vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
+- when choosing mining target ships should take into account expected mining rate of *next* trip.
+  that is, consider returning to all possible dropoffs, and consider the return time & expected next-trip mining rate,
+  calculate an overall mining rate for each possible return, and max over them.
+^^^^^^^^^^^^^ DO THIS ONE ^^^^^^^^^^^^^^^^^^
+
+- think about whether our "halite rate" mining target selection is quite correct.
+  it's neglecting the benefit of getting our already-held halite back to base earlier
+  the benefit of that increases with the amount of halite we have (and with the usefulness of spawning new ships)
+  so maybe there's room for a term that pushes for targets closer to base when we have lots of halite, and when we are still spawning ships (and is even higher early in the game?)
+  would be sweet if we could figure out how to estimate numerically the time value of halite, whatever that means
+
+- maybe need to be more aggressive about moving to adjacent locations where we can get inspiration
+
+- we could have the threshold for returning be lower when you're closer to base, since the time cost is lower
+
+- we have a stupid thing where we choose a mining target that we don't know how to path to so we stay still
+
+- returners shouldn't force miners to evade if they have a free path.
+- returners shouldn't path around stuck-b/c-of-halite obstacles; they should just wait
+
+CHECK HOW OFTEN EVADERETURNER MOVES ARE BLOCKED BY IMPASSABILITY!!!!!!!!
+
+Rachol pre-sends his miners to where he knows he is going to build his dropoff.
+I can do this too but I'd need to make sure I don't decide to place the dropoff somewhere else.
+Also he doesn't just send his returning miners.
+
+EASY THING TP TRY: ramming in 4p under strict conditions (late game, no one will steal the loot)
+
+
+some heuristics for when to stay still and wait for your obstruction to go away instead of pathing around people would be good
+maybe we want a kind of pathfinding that's like, "here are squares you must never touch, and also
+here are some squares that it would nice if you could path around, but don't actually increase the
+path distance to avoid those squares." and then if we get back a path that goes onto a "nice to avoid"
+square, we just sit still. Miners could put adjacent returners in the "nice to avoid" bucket. Possibly
+everyone should put ships-arriving-from-another-square in the "nice to avoid" bucket, because they'll
+probably clear out of your way pretty soon. 
+
+
+try the thing where we do a few iterations of mining target replanning with some repulsion
+between the mining targets
+
+try making it so that we don't avoid enemies when we heavily outnumber them
+and also they don't block mining targets
+
+we may want to send ships back at like 500 halite in the late game to reduce the risk of getting rammed with a full load
+
+probably want some code to evade when we're outnumbered and there's an adjacent guy who might ram
+
+could hunt in packs!
+
+if the ally currently mining a square is going to fill up before exhausting it, we could consider
+it valid to have a second guy choose it as a mining target, using a lowered halite score
+
+evaluate need for dropoff by checking how far mining targets are from base
+
+think more about preferring to mine near enemies in 4p games
+
+consider allowing ships to swap mining targets when A wants to path through B and B is sitting on its mining target
+
+vvvvvvvvvvvvvvvvvvvv TRY THIS vvvvvvvvvvvvvvvvv
+  OH! maybe, instead of the closest ship getting target priority, we should give target priority to ships closer to dropoffs
+  that'll make outer guys move out farther to make room for the inner guys
+^^^^^^^^^^^^^^^^^^^^ TRY THIS ^^^^^^^^^^^^^^^^^
+
+
+
+
+I modified Kappa to use 3.0 in the tgt_halite multiplier thing. Now I'm testing building ships until possibly 140 rounds left in 2p games
+  2 player games:
+    Rank 1:  64 times
+    Rank 2:  55 times
+Not super convincing but I'll evaluate it live
+
+
+LAMBDA: notes on tuning the factor of five in if (tgt_halite > 5 * here_halite) {
+4.0, against Kappa (which uses 5.0):
+  2 player games:
+    Rank 1:  21 times
+    Rank 2:  16 times
+  4 player games:
+    Rank 1:  34 times
+    Rank 2:  14 times
+    Rank 3:  16 times
+    Rank 4:  5 times
+3.5, against Kappa (which uses 5.0):
+Bot Lambda
+  2 player games:
+    Rank 1:  34 times
+    Rank 2:  21 times
+  4 player games:
+    Rank 1:  68 times
+    Rank 2:  36 times
+    Rank 3:  22 times
+    Rank 4:  13 times
+3.0, against Kappa (which uses 5.0):   <-- gonna roll with this
+  2 player games:
+    Rank 1:  32 times
+    Rank 2:  10 times
+  4 player games:
+    Rank 1:  60 times
+    Rank 2:  13 times
+    Rank 3:  7 times
+    Rank 4:  4 times
+2.5, against Kappa (which uses 5.0):
+  2 player games:
+    Rank 1:  175 times
+    Rank 2:  132 times
+  4 player games:
+    Rank 1:  372 times
+    Rank 2:  122 times
+    Rank 3:  58 times
+    Rank 4:  42 times
+2.0, against Kappa (which uses 5.0):
+Bot Lambda
+  2 player games:
+    Rank 1:  13 times
+    Rank 2:  17 times
+  4 player games:
+    Rank 1:  26 times
+    Rank 2:  15 times
+    Rank 3:  10 times
+    Rank 4:  9 times
+
+
+
+
+
+
+OLD (KAPPA): notes on tuning the factor of five in if (tgt_halite > 5 * here_halite) {
+1.0 was very bad as expected 
+2.5 has a good record against 5:
+  2 player games:
+    Rank 1:  28 times
+    Rank 2:  5 times
+  4 player games:
+    Rank 1:  43 times
+    Rank 2:  15 times
+    Rank 3:  3 times
+    Rank 4:  0 times
+7.0 is bad against 5:
+Bot Kappa
+  2 player games:
+    Rank 1:  0 times
+    Rank 2:  7 times
+  4 player games:
+    Rank 1:  0 times
+    Rank 2:  1 times
+    Rank 3:  2 times
+    Rank 4:  10 times
+
+
+
+
