@@ -7,7 +7,7 @@
 #include "Log.h"
 #include "Grid.h"
 
-static const char* NAME = "Nu";
+static const char* NAME = "Xi";
 
 static string read_line()
 {
@@ -54,7 +54,7 @@ void Network::init()
     Game::me = &Game::players[Game::my_player_id];
 
     Log::init(Game::my_player_id);
-    Log::log("Begin logging");
+    //Log::log("Begin logging");
 
     // for each player we get 'playerid shipyard_x shipyard_y'
     for (int i = 0; i < Game::num_players; ++i) {
@@ -68,15 +68,15 @@ void Network::init()
         Game::players[player_id].shipyard.y = values[2];
     }
 
-    Log::log("Constants.MAX_TURNS = %d", Constants::MAX_TURNS);
-    Log::log("Game::num_players = %d", Game::num_players);
-    Log::log("Game::my_player_id = %d", Game::my_player_id);
-    Log::log("Game::players[0] = %s", Game::players[0].toString().c_str());
+    //Log::log("Constants.MAX_TURNS = %d", Constants::MAX_TURNS);
+    //Log::log("Game::num_players = %d", Game::num_players);
+    //Log::log("Game::my_player_id = %d", Game::my_player_id);
+    //Log::log("Game::players[0] = %s", Game::players[0].toString().c_str());
 
     // we get 'gridwidth gridheight'
     values = read_ints();
     grid.resize(values[0], values[1]);
-    Log::log("Grid width=%d height=%d", grid.width, grid.height);
+    //Log::log("Grid width=%d height=%d", grid.width, grid.height);
 
     // we get the width x height grid of halite on each cell
     for (int y = 0; y < grid.height; ++y) {
@@ -132,7 +132,7 @@ void Network::begin_turn()
 
         player.post_update();
 
-        Log::log("read info for player %d: %s", player_id, player.toLongString().c_str());
+        //Log::log("read info for player %d: %s", player_id, player.toLongString().c_str());
     }
 
     // we get an integer telling us how many cells are about to have their halite updated:

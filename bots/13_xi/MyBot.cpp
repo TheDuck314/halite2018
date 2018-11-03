@@ -13,6 +13,7 @@
 #include "hlt/Plan.h"
 #include "hlt/PosMap.h"
 #include "hlt/Util.h"
+#include "hlt/PlayerAnalyzer.h"
 using namespace std;
 
 // GLOBAL STATE
@@ -23,7 +24,7 @@ bool want_dropoff = false;  // recomputed by consider_making_dropoff() each turn
 PosSet impassable(false);  // recomputed by set_impassable each turn
 
 // GLOBAL CONSTANTS
-const int TURNS_LEFT_TO_RETURN = 15;
+const int TURNS_LEFT_TO_RETURN = 15;  // TUNE
 
 
 void plan(const Ship &ship, Vec tgt, Purpose purpose)
@@ -44,18 +45,15 @@ bool should_spawn()
     if (Game::me->halite < min_halite_to_spawn) return false;  // can't spawn
 
     int halite_left = 0;
-    for (int x = 0; x < grid.width; ++x) {
-        for (int y = 0; y < grid.height; ++y) {
-            halite_left += grid({x, y}).halite;
-        }
-    }
+    for (Vec pos : grid.positions) halite_left += grid(pos).halite;
+
     // check if we already have plenty of ships
     if (Game::num_players != 2) {
-        if (Game::turns_left() < 200) return false;
-        if (halite_left < 3500 * (int)Game::me->ships.size()) return false;
+        if (Game::turns_left() < 200) return false;  // TUNE
+        if (halite_left < 3500 * (int)Game::me->ships.size()) return false;  // TUNE
     } else { // two players
-        if (Game::turns_left() < 140) return false;
-        if (halite_left < 2500 * (int)Game::me->ships.size()) return false;
+        if (Game::turns_left() < 140) return false;  // TUNE
+        if (halite_left < 2500 * (int)Game::me->ships.size()) return false;  // TUNE
     }
 
     return true;
@@ -63,7 +61,7 @@ bool should_spawn()
 
 bool we_win_fight(Vec pos)
 {
-    const int R = 4;
+    const int R = 4;  // TUNE
     const int num_enemies = grid.num_within_dist(pos, Game::enemy_ships, R);
 
     bool exclude_returners = grid.smallest_dist(pos, Game::me->structures) > R;
@@ -75,48 +73,75 @@ bool we_win_fight(Vec pos)
         num_allies += 1;
     }
 
-    return num_allies > num_enemies;
+    return num_allies > num_enemies;  // TUNE
 }
+
+
+bool we_win_fight_4p(Vec pos)
+{
+    if (Game::turns_left() > 75) return false;
+
+    const int R = 4;  // TUNE
+    const int num_enemies = grid.num_within_dist(pos, Game::enemy_ships, R);
+
+    bool exclude_returners = true; // grid.smallest_dist(pos, Game::me->structures) > R;
+
+    int num_allies = 0;
+    for (Ship ally : Game::me->ships) {
+        if (grid.dist(ally.pos, pos) > R) continue;
+        if (ally.halite > 300) continue;  // TUNE
+        if (exclude_returners && returning_ship_ids.count(ally.id)) continue;
+        num_allies += 1;
+    }
+
+    return num_enemies <= 1 && num_allies >= 2;  // TUNE
+}
+
+
 
 void set_impassable()
 {
     impassable.fill(false);
 
-    for (Ship enemy_ship : Game::enemy_ships) {
-        // we need to ignore enemy ships that are on top of our structures
-        // or they'll block us from delivering. it's fine to ram them.
-        if (Game::me->has_structure_at(enemy_ship.pos)) continue;
+    for (const Player &enemy : Game::players) {
+        if (enemy.id == Game::my_player_id) continue;
+        const bool enemy_is_cautious = PlayerAnalyzer::player_is_cautious(enemy.id);
+        Log::flog(Game::me->shipyard, "Player %d enemy_is_cautious: %d", enemy.id, enemy_is_cautious);
+        for (Ship enemy_ship : enemy.ships) {
+            // we need to ignore enemy ships that are on top of our structures
+            // or they'll block us from delivering. it's fine to ram them.
+            if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-        for (int d = 0; d < 5; ++d) {
-            const Vec pos = grid.add(enemy_ship.pos, (Direction)d);
-
-            // also, if this is our structure don't avoid it just because there's an
-            // adjacent enemy ship
-            if (Game::me->has_structure_at(pos)) continue;
-
-            // in 4-player games we'll currently be very pacifist and avoid moving
-            // next to an enemy
-            if (Game::num_players != 2) {
-                impassable(pos) = true;
-                continue;
+            if (enemy_is_cautious) {  // currently only ever true in 4p
+                // This player generally doesn't move adjacent to opponents' ships.
+                // Let's only rely on this if they are currently not adjacent to one
+                // of their structures and also not adjacent to any of our ships (because
+                // in those special situations who knows what crazy stuff they might do).
+                const int dist_from_enemy_base = grid.smallest_dist(enemy_ship.pos, enemy.structures);
+                const int dist_from_me = grid.smallest_dist(enemy_ship.pos, Game::me->ships);
+                if (dist_from_enemy_base > 2 && dist_from_me > 1) {
+                    // set the enemy ship itself as impassable, but not the adjacent squares
+                    impassable(enemy_ship.pos) = true;
+                    continue;
+                }
             }
-            // below is for 2-player games
+            // if we get here that enemy_is_cautious stuff didn't apply.
 
-            // let's say it's passable if there are 3 allied ships closer than the second-closest enemy
-            // otherwise it's impassable
-            /*const int second_closest_enemy_dist = grid.second_smallest_dist(pos, Game::enemy_ships);
-            const int num_closer_allies = grid.num_within_dist(pos, Game::me->ships, second_closest_enemy_dist - 1);
-            //Log::flog(pos, "second_closest_enemy_dist = %d", second_closest_enemy_dist);
-            //Log::flog(pos, "num_closer_allies = %d", num_closer_allies);
-            if (num_closer_allies >= 3) {
-                //Log::flog_color(pos, 0, 55, 0, "passable!");
-                impassable(pos) = false;
-            } else {
-                //Log::flog_color(pos, 55, 0, 0, "IMpassable");
-                impassable(pos) = true;
-            }*/
+            for (int d = 0; d < 5; ++d) {
+                const Vec pos = grid.add(enemy_ship.pos, (Direction)d);
 
-            impassable(pos) = !we_win_fight(pos);
+                // If this is our structure don't avoid it just because there's an
+                // adjacent enemy ship
+                if (Game::me->has_structure_at(pos)) continue;
+
+                if (Game::num_players != 2) {
+                    // in 4-player games we'll currently be very pacifist and avoid moving
+                    // next to an enemy (if that enemy-is-cautious stuff didn't apply).
+                    impassable(pos) = true;
+                } else {  // 2-player games
+                    impassable(pos) = !we_win_fight(pos);
+                }
+            }
         }
     }
 }
@@ -317,9 +342,16 @@ void plan_mining(const vector<Ship> &miners)
             }
         }
     }
+    // Inspiration multiplies your mining rate by a factor of (1 + Constants::INSPIRED_BONUS_MULTIPLIER) = 3.
+    // But we might want to use a smaller mult since there's a chance that the enemies will move away,
+    // or something.
+    // - 2.0 is bad, like 30% winrate in self-play
+    // - 4.0 has 50% winrate in self-play
+    // - let's stick with 3.0 for now
+    const double inspiration_mult = 1 + Constants::INSPIRED_BONUS_MULTIPLIER; // = 3. TUNE
     for (Vec pos : grid.positions) {
         if (nearby_enemy_ship_count(pos) >= Constants::INSPIRATION_SHIP_COUNT) {
-            effective_halite(pos) *= 1 + Constants::INSPIRED_BONUS_MULTIPLIER;
+            effective_halite(pos) *= inspiration_mult;
         }
     }
     
@@ -352,7 +384,7 @@ void plan_mining(const vector<Ship> &miners)
     // the square. This will only have an effect if we consider the square passable, in which
     // case it will be an incentive to ram loaded enemy ships
     for (Ship enemy_ship : Game::enemy_ships) {
-        effective_halite(enemy_ship.pos) += 0.5 * enemy_ship.halite;
+        effective_halite(enemy_ship.pos) += 0.5 * enemy_ship.halite;  // TUNE
     }
 
     // TEST: we'll remember each ship's expected halite rate, and use that to decide
@@ -376,49 +408,53 @@ void plan_mining(const vector<Ship> &miners)
         // pick the best target.
         double best_halite_rate = -1e99;
         Vec best_tgt = ship.pos;
-        for (int x = 0; x < grid.width; ++x) {
-            for (int y = 0; y < grid.height; ++y) {
-                Vec pos{x, y};
-                if (impassable(pos)) continue;
-                const double halite = effective_halite(pos);
-                if (halite <= 0) continue;
+        for (Vec pos : grid.positions) {
+            if (impassable(pos)) continue;
+            const double halite = effective_halite(pos);
+            if (halite <= 0) continue;
 
-                const int dist_from_me = grid.dist(pos, ship.pos);
+            const int dist_from_me = grid.dist(pos, ship.pos);
 
-                // we can't pick a square that's already been picked
-                // unless we are closer than the current owner
-                const int owner_id = tgt_to_ship_id(pos);
-                if (owner_id != -1) {
-                    const Ship owner = Game::me->id_to_ship.at(owner_id);
-                    //const int owner_dist_from_base = sid_to_base_dist.at(owner_id);
-                    const int dist_from_owner = grid.dist(pos, owner.pos);
-                    if (dist_from_owner <= dist_from_me) {
-                        //Log::flog(ship, "can't pick %s b/c we aren't closer than %d", +pos.toString(), owner.id);
-                        continue;
-                    }
+            // we can't pick a square that's already been picked
+            // unless we are closer than the current owner
+            const int owner_id = tgt_to_ship_id(pos);
+            if (owner_id != -1) {
+                const Ship owner = Game::me->id_to_ship.at(owner_id);
+                //const int owner_dist_from_base = sid_to_base_dist.at(owner_id);
+                const int dist_from_owner = grid.dist(pos, owner.pos);
+                if (dist_from_owner <= dist_from_me) {
+                    //Log::flog(ship, "can't pick %s b/c we aren't closer than %d", +pos.toString(), owner.id);
+                    continue;
                 }
+            }
 
-                // TODO: consider distance to all our structures, and the relative richness of the area around each structure
-                const int dist_from_base = grid.smallest_dist(pos, Game::me->structures);
-                // let's use a crude estimate of halite/turn. roughly speaking we're gonna
-                // get (cell halite) / EXTRACT_RATIO halite per turn. And let's assume we can
-                // mine at a similar rate from nearby cells. But multiply by a fudge factor of 0.7
-                // because the halite decreases as we mine it. Then it'll take this long to fill up:
-                const double naive_mine_rate = 0.7 * halite * Constants::INV_EXTRACT_RATIO;
-                // Let's try to account for the 
-                // fact that when you mine many small squares instead of one big square, you have to waste
-                // time and halite moving.
-                // Let's say your mining rate is 50% slower that=n the naive calculation
-                const double efficiency = 0.5 + 0.5 * max(0.0, min((double)Constants::MAX_HALITE, halite)) / (double)Constants::MAX_HALITE;
-                const double mine_rate = efficiency * naive_mine_rate;
-                const double turns_to_fill_up = halite_needed / mine_rate;
-                const double total_time = turns_to_fill_up + dist_from_base + 2 * dist_from_me;
-                const double overall_halite_rate = halite_needed / total_time;
+            // TODO: consider distance to all our structures, and the relative richness of the area around each structure
+            const int dist_from_base = grid.smallest_dist(pos, Game::me->structures);
 
-                if (overall_halite_rate > best_halite_rate) {
-                    best_halite_rate = overall_halite_rate;
-                    best_tgt = pos;
-                }
+            // silly late-game thing: don't choose a target if by the time we get there
+            // we'd have to collapse to base for the end of the game
+            // NOTE: this has no effect on self-play performance, so commenting it out for now
+            //const int turns_left_on_arrival = Game::turns_left() - dist_from_me;
+            //if (turns_left_on_arrival < dist_from_base + TURNS_LEFT_TO_RETURN) continue;
+
+            // let's use a crude estimate of halite/turn. roughly speaking we're gonna
+            // get (cell halite) / EXTRACT_RATIO halite per turn. And let's assume we can
+            // mine at a similar rate from nearby cells. But multiply by a fudge factor of 0.7
+            // because the halite decreases as we mine it. Then it'll take this long to fill up:
+            const double naive_mine_rate = 0.7 * halite * Constants::INV_EXTRACT_RATIO;  // TUNE
+            // Let's try to account for the 
+            // fact that when you mine many small squares instead of one big square, you have to waste
+            // time and halite moving.
+            // Let's say your mining rate is 50% slower that=n the naive calculation
+            const double efficiency = 0.5 + 0.5 * max(0.0, min((double)Constants::MAX_HALITE, halite)) / (double)Constants::MAX_HALITE;  // TUNE
+            const double mine_rate = efficiency * naive_mine_rate;
+            const double turns_to_fill_up = halite_needed / mine_rate;
+            const double total_time = turns_to_fill_up + dist_from_base + 2 * dist_from_me;  // TUNE
+            const double overall_halite_rate = halite_needed / total_time;
+
+            if (overall_halite_rate > best_halite_rate) {
+                best_halite_rate = overall_halite_rate;
+                best_tgt = pos;
             }
         }
 
@@ -441,6 +477,11 @@ void plan_mining(const vector<Ship> &miners)
         const Ship ship = Game::me->id_to_ship.at(ship_id);
         Log::flog(ship, "final mining tgt: %s", +tgt.toString());
 
+        /*if (ship.halite > 500 && (grid.dist(ship.pos, tgt) > 2 + grid.smallest_dist(ship.pos, Game::me->structures))) {
+            Log::flog_color(ship.pos, 255, 255, 0, "going to far square %s", +tgt.toString());
+            Log::flog_color(tgt, 0, 255, 255, "far dest of %d", ship.id);
+        }*/
+
         if (ship.pos == tgt) {
             Log::flog(ship, "mining tgt is here!");
             plan(ship, ship.pos, Purpose::Mine);
@@ -458,7 +499,7 @@ void plan_mining(const vector<Ship> &miners)
 //            Log::flog(ship, "tgt/here halite ratio = %f", h_ratio);
 
             // tune the factor here
-            if (tgt_eff_halite > 3.0 * here_eff_halite) { // default is 5
+            if (tgt_eff_halite > 3.0 * here_eff_halite) {  // TUNE
                 Log::flog(ship, "going to move toward mining target %s", +tgt.toString());
                 plan(ship, tgt, Purpose::Mine);
             } else {
@@ -466,7 +507,6 @@ void plan_mining(const vector<Ship> &miners)
                 plan(ship, ship.pos, Purpose::Mine);
             }
         }
-
     }
     Log::log("plan_mining end");
 }
@@ -477,11 +517,11 @@ void consider_making_dropoff(vector<Command> &commands)
 {
     want_dropoff = false;
 
-    if (Game::turns_left() < 75) {
+    if (Game::turns_left() < 75) {  // TUNE
         Log::log("too late to make dropoff");
         return;
     }
-    if (Game::me->ships.size() < -3 + 20 * (1 + Game::me->dropoffs.size())) {
+    if (Game::me->ships.size() < -3 + 20 * (1 + Game::me->dropoffs.size())) {  // TUNE
         Log::log("not enough ships to make dropoff");
         return;
     }
@@ -507,7 +547,7 @@ void consider_making_dropoff(vector<Command> &commands)
 
     for (Vec pos : grid.positions) {
         // don't build structures too close together
-        if (dist_to_structure(pos) < 17) continue;
+        if (dist_to_structure(pos) < 17) continue;  // TUNE
 
         // can't build on top of enemy structures
         if (dist_to_enemy_structure(pos) == 0) continue;
@@ -516,9 +556,9 @@ void consider_making_dropoff(vector<Command> &commands)
         // don't build at a spot that's closer to an enemy structure than it
         // is to any of our structures, unless there are no nearby enemy ships
         // in a big radius        
-        if (dist_to_enemy_structure(pos) <= dist_to_structure(pos) && dist_to_enemy_ship(pos) < 20) continue;
+        if (dist_to_enemy_structure(pos) <= dist_to_structure(pos) && dist_to_enemy_ship(pos) < 20) continue;  // TUNE
 
-        const int radius = 7;        
+        const int radius = 7;  // TUNE
         int new_halite_in_radius = 0;
         int old_halite_in_radius = 0;
         // let's only count halite that's significantly closer to this new dropoff
@@ -535,13 +575,13 @@ void consider_making_dropoff(vector<Command> &commands)
         }
         //Log::flog(pos, "new_halite_in_radius = %d", new_halite_in_radius);
         //Log::flog(pos, "old_halite_in_radius = %d", old_halite_in_radius);
-        if (new_halite_in_radius < 25000) {
+        if (new_halite_in_radius < 25000) {  // TUNE
             continue;
         }
 
         double dist_from_base = grid.smallest_dist(pos, Game::me->structures);
         // TODO: consider turning this factor:
-        double dist_factor = 1.0 - 0.01 * dist_from_base;
+        double dist_factor = 1.0 - 0.01 * dist_from_base;  // TUNE
 
         double score = new_halite_in_radius * dist_factor;
 
@@ -587,24 +627,7 @@ void consider_ramming(vector<Command> &commands)
     for (Ship enemy_ship : Game::enemy_ships) {
         if (contains(Game::enemy_structures, enemy_ship.pos)) continue;  // don't ram on top of enemy structures
 
-        /*
-        // let's say we need 2 friendly ships that are both closer than the closest enemy ship
-        int dist_to_closest_enemy = 9999;
-        for (Ship other_enemy : Game::enemy_ships) {
-            if (other_enemy.id == enemy_ship.id) continue;
-            const int dist = grid.dist(other_enemy.pos, enemy_ship.pos);
-            if (dist < dist_to_closest_enemy) dist_to_closest_enemy = dist; 
-        }
-        int num_closer_allies = 0;
-        for (Ship ally : Game::me->ships) {
-            if (grid.dist(ally.pos, enemy_ship.pos) < dist_to_closest_enemy) num_closer_allies += 1;
-        }
-        //Log::flog(enemy_ship.pos, "dist_to_closest_enemy = %d", dist_to_closest_enemy);
-        //Log::flog(enemy_ship.pos, "num_closer_allies = %d", num_closer_allies);
-        if (num_closer_allies < 2) continue;
-        */
-
-        // TEST: let's just use the check in set_impassable()
+        // let's just use the check in set_impassable()
         if (impassable(enemy_ship.pos)) continue;
 
         // find the best adjacent allied rammer, if any
@@ -615,7 +638,7 @@ void consider_ramming(vector<Command> &commands)
             if (grid.dist(my_ship.pos, enemy_ship.pos) != 1) continue;            
             if (!can_move(my_ship)) continue;
             if (busy_ship_ids.count(my_ship.id)) continue;
-            if (my_ship.halite >= enemy_ship.halite) continue;  // TODO: maybe relax this condition when we heavily outnumber?
+            if (my_ship.halite >= 1.0 * enemy_ship.halite) continue;  // TUNE. TODO: maybe relax this condition when we heavily outnumber?
 
             if (my_ship.halite < best_rammer.halite) {
                 best_rammer = my_ship;
@@ -643,21 +666,7 @@ void consider_fleeing()
         if (returning_ship_ids.count(ship.id)) continue;  // returning ships will already path to avoid enemies
         if (!impassable(ship.pos)) continue;  // this location is apparently fine, don't flee
 
-        /*const int closest_enemy_dist = grid.smallest_dist(ship.pos, Game::enemy_ships);
-        if (closest_enemy_dist > 1) continue;  // no adjacent enemies; we're probably fine
-
-        const int dist_to_second_closest_enemy = grid.second_smallest_dist(ship.pos, Game::enemy_ships);
-        bool have_supporting_ally = false;
-        for (Ship ally : Game::me->ships) {
-            if (ally.id != ship.id and grid.dist(ally.pos, ship.pos) <= dist_to_second_closest_enemy) {
-                have_supporting_ally = true;
-                break;
-            }
-        }
-        if (have_supporting_ally) continue;  // it's cool
-        */
-
-        Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
+        //Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
 
         // be afraid!
         // try to move toward a location ranked by passability, then ally distance
@@ -693,6 +702,8 @@ vector<Command> turn()
     plans.clear();
     busy_ship_ids.clear();
 
+    PlayerAnalyzer::analyze();
+
     set_impassable();
 
     vector<Command> commands;
@@ -717,19 +728,16 @@ vector<Command> turn()
             continue;
         }
 
-
         bool returning;
-        if (returning_ship_ids.count(ship.id)) {
-            // this ship has been returning
+        if (returning_ship_ids.count(ship.id)) {  // this ship has been returning
             if (ship.halite <= 0) {
                 returning_ship_ids.erase(ship.id);
                 returning = false;
             } else {
                 returning = true;
             }
-        } else {
-            // this ship has not been returning
-            if (ship.halite >= Constants::MAX_HALITE) {
+        } else {  // this ship has not been returning
+            if (ship.halite >= Constants::MAX_HALITE) {  // TUNE
                 returning_ship_ids.insert(ship.id);
                 returning = true;
             } else {
