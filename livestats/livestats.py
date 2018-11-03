@@ -7,17 +7,30 @@ from collections import defaultdict
 my_userid = 3191
 my_username = "TheDuck314"
 
-response = requests.get(
-    "https://api.2018.halite.io/v1/api/user/{}/match?order_by=desc,time_played&limit=500"
-    .format(my_userid)
-).json()
+games_per_request = 250  # 250 is api max I think
+response = []
+for i in range(2):
+    response.extend(requests.get(
+        "https://api.2018.halite.io/v1/api/user/{}/match?order_by=desc,time_played&limit={}&offset={}"
+        .format(my_userid, games_per_request, i * games_per_request)
+    ).json())
 
+print("response contains {} games".format(len(response)))
 
 my_stats = []
 
 opponent_counts = defaultdict(lambda: 0)
 
+seen_game_ids = set()
+
 for game_dict in response:
+    # I think we could potentially get duplicates b/c of the pagination; deal with that:
+    game_id = game_dict["game_id"]
+    if game_id in seen_game_ids:
+        print("discarding duplicate game_id {}".format(game_id))
+        continue
+    seen_game_ids.add(game_id)
+
     # let's discard challenge games
     if game_dict["challenge_id"] is not None:
         continue
@@ -34,12 +47,15 @@ for game_dict in response:
         rank_to_halite[rank] = halite
 
     bot_to_rank = {}
+    winner = "????"
     for userid_str, player_dict in game_dict["players"].items():
         version = player_dict["version_number"]
         bot = "{} v{}".format(player_dict["username"], version)
         rank = player_dict["rank"]
         bot_to_rank[bot] = rank
         username = player_dict["username"]
+        if rank == 1:
+            winner = username
         players_present.append(username)
         if int(userid_str) == my_userid:
             my_rank = rank
@@ -58,14 +74,17 @@ for game_dict in response:
         "MyVersion": my_version,
         "MyHalite": rank_to_halite[my_rank],
         "WinnerHalite": rank_to_halite[1],
+        "Winner": winner,
     })
+
+print("{} non-challenge games".format(len(my_stats)))
 
 my_stats = pd.DataFrame(my_stats)
 #print(my_stats)
 
-#my_stats = my_stats[my_stats.MyVersion == 21]
-#my_stats = my_stats[my_stats.MyVersion == 22]
-my_stats = my_stats[my_stats.MyVersion == 23]
+version = 23
+my_stats = my_stats[my_stats.MyVersion == version]
+print("{} games for version {}".format(len(my_stats), version))
 
 pd.set_option("display.width", 300)
 
@@ -87,7 +106,7 @@ def show_stats(stats, title):
 
 show_stats(my_stats, "overall")
 
-for opp in ["Rachol", "zxqfl", "shummie", "ColinWHart"]:
+for opp in ["Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))
 
 header("2p losses against rachol")
@@ -97,9 +116,41 @@ print()
 print()
 
 header("2p losses in general")
-tmp = my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","WinnerHalite","MyHalite","Replay"]].copy()
+tmp = my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()
 tmp["HaliteRatio"] = tmp["WinnerHalite"] / tmp["MyHalite"].astype(float)
 print(tmp.sort_values(by="HaliteRatio", ascending=False).to_string())
+print()
+print()
+
+header("4p last places")
+tmp = my_stats[(my_stats.NumPlayers == 4) & (my_stats.MyRank == 4)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()
+tmp["HaliteRatio"] = tmp["WinnerHalite"] / tmp["MyHalite"].astype(float)
+print(tmp.sort_values(by="HaliteRatio", ascending=False).to_string())
+print()
+print()
+
+header("4p third places")
+tmp = my_stats[(my_stats.NumPlayers == 4) & (my_stats.MyRank == 3)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()
+tmp["HaliteRatio"] = tmp["WinnerHalite"] / tmp["MyHalite"].astype(float)
+print(tmp.sort_values(by="HaliteRatio", ascending=False).to_string())
+print()
+print()
+
+header("4p second places")
+tmp = my_stats[(my_stats.NumPlayers == 4) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()
+tmp["HaliteRatio"] = tmp["WinnerHalite"] / tmp["MyHalite"].astype(float)
+print(tmp.sort_values(by="HaliteRatio", ascending=False).to_string())
+print()
+print()
+
+header("2p results by opponent")
+tmp = my_stats[(my_stats.NumPlayers == 2)].copy()
+tmp["Opponent"] = tmp["Players"].apply(lambda ps: next(p for p in ps if p != my_username))
+tmp = tmp.groupby(["Opponent", "MyRank"]).size().unstack("MyRank").fillna(0.0).astype(int)
+tmp["TotalGames"] = tmp.sum(axis=1)
+tmp.sort_values(by="TotalGames", ascending=False, inplace=True)
+tmp.drop("TotalGames", axis=1, inplace=True)
+print(tmp.to_string())
 print()
 print()
 

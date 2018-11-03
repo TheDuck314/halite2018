@@ -15,6 +15,8 @@ https://halite.io/play/?game_id=1166131&replay_class=1&replay_name=replay-201810
 in 2p there's probably a lot of value in grouping -- at least, our low-halite ships
 should be attracted to wherever the action is
 
+WAIT-- are my returners gonna casually ram enemies I designate as "passable"?? that seems pretty wrong
+
 consider tuning the parameter of when to stop making ships
 
 some sort of macro to make it easy to extract the tunable constants would be sweet
@@ -41,8 +43,6 @@ vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
   so maybe there's room for a term that pushes for targets closer to base when we have lots of halite, and when we are still spawning ships (and is even higher early in the game?)
   would be sweet if we could figure out how to estimate numerically the time value of halite, whatever that means
 
-- maybe need to be more aggressive about moving to adjacent locations where we can get inspiration
-
 - we could have the threshold for returning be lower when you're closer to base, since the time cost is lower
 
 - we have a stupid thing where we choose a mining target that we don't know how to path to so we stay still
@@ -56,7 +56,7 @@ Rachol pre-sends his miners to where he knows he is going to build his dropoff.
 I can do this too but I'd need to make sure I don't decide to place the dropoff somewhere else.
 Also he doesn't just send his returning miners.
 
-EASY THING TP TRY: ramming in 4p under strict conditions (late game, no one will steal the loot)
+EASY THING TO TRY: ramming in 4p under strict conditions (late game, no one will steal the loot)
 
 
 some heuristics for when to stay still and wait for your obstruction to go away instead of pathing around people would be good
@@ -71,12 +71,7 @@ probably clear out of your way pretty soon.
 try the thing where we do a few iterations of mining target replanning with some repulsion
 between the mining targets
 
-try making it so that we don't avoid enemies when we heavily outnumber them
-and also they don't block mining targets
-
 we may want to send ships back at like 500 halite in the late game to reduce the risk of getting rammed with a full load
-
-probably want some code to evade when we're outnumbered and there's an adjacent guy who might ram
 
 could hunt in packs!
 
@@ -85,100 +80,9 @@ it valid to have a second guy choose it as a mining target, using a lowered hali
 
 evaluate need for dropoff by checking how far mining targets are from base
 
-think more about preferring to mine near enemies in 4p games
-
-consider allowing ships to swap mining targets when A wants to path through B and B is sitting on its mining target
-
-vvvvvvvvvvvvvvvvvvvv TRY THIS vvvvvvvvvvvvvvvvv
-  OH! maybe, instead of the closest ship getting target priority, we should give target priority to ships closer to dropoffs
-  that'll make outer guys move out farther to make room for the inner guys
-^^^^^^^^^^^^^^^^^^^^ TRY THIS ^^^^^^^^^^^^^^^^^
+think more about preferring to mine near enemies in 4p games, even when there isn't instantaneous inspiration. there's an NAP-like idea here
 
 
-
-
-I modified Kappa to use 3.0 in the tgt_halite multiplier thing. Now I'm testing building ships until possibly 140 rounds left in 2p games
-  2 player games:
-    Rank 1:  64 times
-    Rank 2:  55 times
-Not super convincing but I'll evaluate it live
-
-
-LAMBDA: notes on tuning the factor of five in if (tgt_halite > 5 * here_halite) {
-4.0, against Kappa (which uses 5.0):
-  2 player games:
-    Rank 1:  21 times
-    Rank 2:  16 times
-  4 player games:
-    Rank 1:  34 times
-    Rank 2:  14 times
-    Rank 3:  16 times
-    Rank 4:  5 times
-3.5, against Kappa (which uses 5.0):
-Bot Lambda
-  2 player games:
-    Rank 1:  34 times
-    Rank 2:  21 times
-  4 player games:
-    Rank 1:  68 times
-    Rank 2:  36 times
-    Rank 3:  22 times
-    Rank 4:  13 times
-3.0, against Kappa (which uses 5.0):   <-- gonna roll with this
-  2 player games:
-    Rank 1:  32 times
-    Rank 2:  10 times
-  4 player games:
-    Rank 1:  60 times
-    Rank 2:  13 times
-    Rank 3:  7 times
-    Rank 4:  4 times
-2.5, against Kappa (which uses 5.0):
-  2 player games:
-    Rank 1:  175 times
-    Rank 2:  132 times
-  4 player games:
-    Rank 1:  372 times
-    Rank 2:  122 times
-    Rank 3:  58 times
-    Rank 4:  42 times
-2.0, against Kappa (which uses 5.0):
-Bot Lambda
-  2 player games:
-    Rank 1:  13 times
-    Rank 2:  17 times
-  4 player games:
-    Rank 1:  26 times
-    Rank 2:  15 times
-    Rank 3:  10 times
-    Rank 4:  9 times
-
-
-
-
-
-
-OLD (KAPPA): notes on tuning the factor of five in if (tgt_halite > 5 * here_halite) {
-1.0 was very bad as expected 
-2.5 has a good record against 5:
-  2 player games:
-    Rank 1:  28 times
-    Rank 2:  5 times
-  4 player games:
-    Rank 1:  43 times
-    Rank 2:  15 times
-    Rank 3:  3 times
-    Rank 4:  0 times
-7.0 is bad against 5:
-Bot Kappa
-  2 player games:
-    Rank 1:  0 times
-    Rank 2:  7 times
-  4 player games:
-    Rank 1:  0 times
-    Rank 2:  1 times
-    Rank 3:  2 times
-    Rank 4:  10 times
 
 
 
