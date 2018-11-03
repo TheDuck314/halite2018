@@ -5,6 +5,7 @@ matchrunner/matches/
 livestats/example.json
 bots/*/build/
 bots/*/clean_replays.sh
+bots/*/clean_build.sh
 bots/*/make_and_run.sh
 bots/*/replays/
 bots/*/upload.zip
