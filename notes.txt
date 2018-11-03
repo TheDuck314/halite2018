@@ -1,6 +1,10 @@
 NOTES ON COMBAT
 - Rachol probably prefers to ram high-halite ships with low-halite ships, which does sound good
 
+I think I really could benefit from
+ - prefer to choose mining locations near good dropoffs
+ - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
+
 would be nice to find low-halite paths back when returning. But not at the cost of making the total path length longer
 
 maybe need some repulsion in mining targets
@@ -22,6 +26,9 @@ consider tuning the parameter of when to stop making ships
 some sort of macro to make it easy to extract the tunable constants would be sweet
 
 consider tuning the min nearby halite to make a dropoff / min dist between dropoffs
+
+min dist between dropoffs should logically be a function of halite density at the new dropoff
+higher halite density justifes closer-spaced dropoffs (especially on smaller maps?)
 
 lategame 4p ramming could be op, if you only do it when you're the only one nearby
 

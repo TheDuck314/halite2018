@@ -55,6 +55,7 @@ v23 12_nu
 still playing rank=1 μ=89.19 σ=0.57 at 20181102 7:52pm
 final rank=1 μ=89.25 σ=0.54 at 20181103 at 3:25am
 - condition for passability/attack/flee is that # non-returning allies > # enemies in Manhattan radius 4
+  this was 100% winrate against Mu in 2p
 
 v24 13_xi
 - tiny "fix" that doesn't matter: don't pick mining targets such that we'll immediately have to collapse once we get there b/c of game ending
