@@ -46,6 +46,11 @@ final rank=1 μ=86.72 σ=0.40 at 20181031 10:47pm
   logic in dropoff placement
 
 v22 11_mu
+final rank=1 or 2, μ=87.52 σ=0.43 at 20181101 11:31pm
 - one thing I'm including even though self-play doesn't care: mild distance penalty for dropoffs, to discourage a really terrible one I saw in live
 - rudimentary code for fleeing adjacent enemies in 2p games when we feel threatened. gives 90% winrate against Lambda. This is probably inflated since
   Mu's "should I flee" code is exactly the same as Lambda's "should I attack" code.
+
+v23 12_nu
+still playing rank=1 μ=89.19 σ=0.57 at 20181102 7:52pm
+- condition for passability/attack/flee is that # non-returning allies > # enemies in Manhattan radius 4

@@ -1,12 +1,13 @@
-- maybe need some repulsion in mining targets
+NOTES ON COMBAT
+- Rachol probably prefers to ram high-halite ships with low-halite ships, which does sound good
+
+would be nice to find low-halite paths back when returning. But not at the cost of making the total path length longer
+
+maybe need some repulsion in mining targets
 
 dropoff distance penalty may be too heavy handed
 
-need smarter combat
-
 need some hysteresis in dropoff location choice
-
-probably want to lightly reward closer dropoff locations since our ships will get there faster
 
 in addition to not building so far away, we also need to not be so scared of recent enemy dropoffs
 https://halite.io/play/?game_id=1166131&replay_class=1&replay_name=replay-20181030-074422%2B0000-1540884547-64-64-1166131
@@ -16,13 +17,7 @@ should be attracted to wherever the action is
 
 consider tuning the parameter of when to stop making ships
 
-some sort of macro to make it easy to extra the tunable constants would be sweet
-
-1v1 combat has a ton of possibilities. I think it's all about ganging up on smaller groups of enemys and carting away their halite
-
-LATE NIGHT ME THINGS 1V1 COMBAT IS SUPER IMPORTANT AND HAS SOME EASY GAINS:
-  - prefer to group up
-  - flee if you're outnumbered
+some sort of macro to make it easy to extract the tunable constants would be sweet
 
 consider tuning the min nearby halite to make a dropoff / min dist between dropoffs
 
@@ -32,7 +27,7 @@ in 4p, at the end, we can ram empty ships into whichever player is closest ahead
 
 I'm probably not building enough dropoffs on big 2p maps with a lot of halite
 
-near game end, don't pick mining targets outside the collapsing lightcone of our structures
+>>>> near game end, don't pick mining targets outside the collapsing lightcone of our structures
 
 vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 - when choosing mining target ships should take into account expected mining rate of *next* trip.

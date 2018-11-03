@@ -19,6 +19,7 @@ BOT_COMMANDS = {
     "Kappa":  "/home/greg/coding/halite/2018/repo/bots/9_kappa/build/MyBot",
     "Lambda": "/home/greg/coding/halite/2018/repo/bots/10_lambda/build/MyBot",
     "Mu":     "/home/greg/coding/halite/2018/repo/bots/11_mu/build/MyBot",
+    "Nu":     "/home/greg/coding/halite/2018/repo/bots/12_nu/build/MyBot",
 }
 
 def run_game(game_dir, seed, bot0, bot1, force_player_count):
@@ -91,8 +92,8 @@ def get_seed():
     return random.randint(1, 999999)
 
 def main():
-    bot0 = "Mu"
-    bot1 = "Lambda"
+    bot0 = "Nu"
+    bot1 = "Mu"
     #force_player_count = 2
     force_player_count = 4
     #force_player_count = None

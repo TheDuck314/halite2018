@@ -24,8 +24,14 @@ for game_dict in response:
 
     my_rank = -1
     my_version = -1
-
     players_present = []
+    winner_halite = -1
+
+    rank_to_halite = {}
+    for player_stats_dict in game_dict["stats"]["player_statistics"]:
+        rank = player_stats_dict["rank"]
+        halite = player_stats_dict["final_production"]
+        rank_to_halite[rank] = halite
 
     bot_to_rank = {}
     for userid_str, player_dict in game_dict["players"].items():
@@ -37,7 +43,7 @@ for game_dict in response:
         players_present.append(username)
         if int(userid_str) == my_userid:
             my_rank = rank
-            my_version = version
+            my_version = version            
         else:
             opponent_counts[username] += 1
     game_id = game_dict["game_id"]
@@ -50,13 +56,16 @@ for game_dict in response:
         "Replay": replay_link,
         "Players": sorted(players_present),
         "MyVersion": my_version,
+        "MyHalite": rank_to_halite[my_rank],
+        "WinnerHalite": rank_to_halite[1],
     })
 
 my_stats = pd.DataFrame(my_stats)
 #print(my_stats)
 
 #my_stats = my_stats[my_stats.MyVersion == 21]
-my_stats = my_stats[my_stats.MyVersion == 22]
+#my_stats = my_stats[my_stats.MyVersion == 22]
+my_stats = my_stats[my_stats.MyVersion == 23]
 
 pd.set_option("display.width", 300)
 
@@ -88,7 +97,9 @@ print()
 print()
 
 header("2p losses in general")
-print(my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)].to_string())
+tmp = my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","WinnerHalite","MyHalite","Replay"]].copy()
+tmp["HaliteRatio"] = tmp["WinnerHalite"] / tmp["MyHalite"].astype(float)
+print(tmp.sort_values(by="HaliteRatio", ascending=False).to_string())
 print()
 print()
 
