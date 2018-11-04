@@ -98,8 +98,9 @@ def main():
     parser.add_argument("-p", "--players", type=int, help="force a given number of players")
     args = parser.parse_args()
 
-#    ref_bot = "Xi"
-
+    challenger_bots = ["Omicron"]
+    ref_bot = "Xi"
+    """
     challenger_base = "Omicron"
     param = "MINING_DIST_FROM_ME_MULT"
     values = [3.0, 2.0]
@@ -111,7 +112,8 @@ def main():
         BOT_COMMANDS[challenger_bot] = BOT_COMMANDS[challenger_base] + " " + override
 
     ref_bot = challenger_bots.pop()
-    
+    """
+
     bots = challenger_bots + [ref_bot]
 
     bot_to_stats = {}

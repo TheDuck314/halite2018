@@ -38,6 +38,16 @@ I'm probably not building enough dropoffs on big 2p maps with a lot of halite
 
 >>>> near game end, don't pick mining targets outside the collapsing lightcone of our structures
 
+consider making fleeing an extra high plan priority
+
+flee toward base, not allies?
+
+multiple ships can try to flee onto the same square, which is dumb
+
+we still don't actually flee onto impasable squares
+
+I think I might be building too many ships on 2p maps, specifically when there's not much halite left
+
 vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 - when choosing mining target ships should take into account expected mining rate of *next* trip.
   that is, consider returning to all possible dropoffs, and consider the return time & expected next-trip mining rate,

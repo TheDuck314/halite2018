@@ -61,8 +61,11 @@ v24 13_xi
   allowing ourselves to move next to them. gives like 85% 4p winrate against Nu, but it's tuned against Nu so this may be optimistic.
 
 work in progress v25 14_omicron
-REMEMBER THAT YOU MUST REENABLE CAUTIOSNESS-EXPLOITATION BEFORE UPLOADING!
+REMEMBER THAT YOU MUST REENABLE CAUTIOUSNESS-EXPLOITATION BEFORE UPLOADING!
 - consider enemy structures impassable if that player has an adjacent ship
 - when evading a returner, we never consider that returner's square as blocked
+- returners don't consider Stuck ships as obstacles; if they end up pathing through one they just stay Stuck for a turn too
+- returners find the lowest halite path that's also a min-distance path
+- don't give two ships the same flee dest
 
 
