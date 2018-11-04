@@ -4,16 +4,15 @@ import requests
 import pandas as pd
 from collections import defaultdict
 
-my_userid = 3191
-my_username = "TheDuck314"
+my_userid = 3191; my_username = "TheDuck314"; only_version = -1
+#my_userid = 134; my_username = "Rachol"; only_version = -1
 
 games_per_request = 250  # 250 is api max I think
 response = []
 for i in range(2):
-    response.extend(requests.get(
-        "https://api.2018.halite.io/v1/api/user/{}/match?order_by=desc,time_played&limit={}&offset={}"
-        .format(my_userid, games_per_request, i * games_per_request)
-    ).json())
+    url = "https://api.2018.halite.io/v1/api/user/{}/match?order_by=desc,time_played&limit={}&offset={}".format(my_userid, games_per_request, i * games_per_request)
+    print(url)
+    response.extend(requests.get(url).json())
 
 print("response contains {} games".format(len(response)))
 
@@ -82,9 +81,12 @@ print("{} non-challenge games".format(len(my_stats)))
 my_stats = pd.DataFrame(my_stats)
 #print(my_stats)
 
-version = 25
-my_stats = my_stats[my_stats.MyVersion == version]
-print("{} games for version {}".format(len(my_stats), version))
+if only_version == -1:
+    only_version = my_stats.MyVersion.max()
+    print("Using {} latest version: {}".format(my_username, only_version))
+
+my_stats = my_stats[my_stats.MyVersion == only_version]
+print("{} games for version {}".format(len(my_stats), only_version))
 
 pd.set_option("display.width", 300)
 
@@ -106,7 +108,9 @@ def show_stats(stats, title):
 
 show_stats(my_stats, "overall")
 
-for opp in ["Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
+for opp in ["TheDuck314", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
+    if opp == my_username:
+        continue
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))
 
 header("2p losses against rachol")

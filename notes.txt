@@ -5,11 +5,9 @@ I think I really could benefit from
  - prefer to choose mining locations near good dropoffs
  - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
 
-would be nice to find low-halite paths back when returning. But not at the cost of making the total path length longer
-
 maybe need some repulsion in mining targets
 
-dropoff distance penalty may be too heavy handed
+dropoff distance penalty may be too heavy handed. or not heavy handed enough! tune it.
 
 need some hysteresis in dropoff location choice
 
@@ -23,8 +21,6 @@ WAIT-- are my returners gonna casually ram enemies I designate as "passable"?? t
 
 consider tuning the parameter of when to stop making ships
 
-some sort of macro to make it easy to extract the tunable constants would be sweet
-
 consider tuning the min nearby halite to make a dropoff / min dist between dropoffs
 
 min dist between dropoffs should logically be a function of halite density at the new dropoff
@@ -36,19 +32,20 @@ in 4p, at the end, we can ram empty ships into whichever player is closest ahead
 
 I'm probably not building enough dropoffs on big 2p maps with a lot of halite
 
->>>> near game end, don't pick mining targets outside the collapsing lightcone of our structures
-
-consider making fleeing an extra high plan priority
-
 flee toward base, not allies?
 
-multiple ships can try to flee onto the same square, which is dumb
+don't ram when you don't have enough spare capacity nearby to pick up the halite?
 
 we still don't actually flee onto impasable squares
 
 try making the planning priority queue just a regular queue.
 
 I think I might be building too many ships on 2p maps, specifically when there's not much halite left
+
+maybe the advance dropoffs are bad because they're very far from the turtles and they have to 
+spend tons of time getting there. that suggests there should be benefits from:
+ - anticipating the dropoff location and preferring to mine near there
+ - preferring to build the dropoffs closer to base, and closer to our ships
 
 vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 - when choosing mining target ships should take into account expected mining rate of *next* trip.
@@ -67,24 +64,12 @@ vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 - we have a stupid thing where we choose a mining target that we don't know how to path to so we stay still
 
 - returners shouldn't force miners to evade if they have a free path.
-- returners shouldn't path around stuck-b/c-of-halite obstacles; they should just wait
-
-CHECK HOW OFTEN EVADERETURNER MOVES ARE BLOCKED BY IMPASSABILITY!!!!!!!!
 
 Rachol pre-sends his miners to where he knows he is going to build his dropoff.
 I can do this too but I'd need to make sure I don't decide to place the dropoff somewhere else.
 Also he doesn't just send his returning miners.
 
 EASY THING TO TRY: ramming in 4p under strict conditions (late game, no one will steal the loot)
-
-
-some heuristics for when to stay still and wait for your obstruction to go away instead of pathing around people would be good
-maybe we want a kind of pathfinding that's like, "here are squares you must never touch, and also
-here are some squares that it would nice if you could path around, but don't actually increase the
-path distance to avoid those squares." and then if we get back a path that goes onto a "nice to avoid"
-square, we just sit still. Miners could put adjacent returners in the "nice to avoid" bucket. Possibly
-everyone should put ships-arriving-from-another-square in the "nice to avoid" bucket, because they'll
-probably clear out of your way pretty soon. 
 
 
 try the thing where we do a few iterations of mining target replanning with some repulsion
@@ -96,8 +81,6 @@ could hunt in packs!
 
 if the ally currently mining a square is going to fill up before exhausting it, we could consider
 it valid to have a second guy choose it as a mining target, using a lowered halite score
-
-evaluate need for dropoff by checking how far mining targets are from base
 
 think more about preferring to mine near enemies in 4p games, even when there isn't instantaneous inspiration. there's an NAP-like idea here
 
