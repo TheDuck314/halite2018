@@ -11,7 +11,8 @@ enum class Purpose
     Ram = 1,            // trying to hit an adjacent enemy
     EvadeReturner = 2,  // getting out of the way of someone with the Return purpose
     Return = 3,         // bringing halite back to base
-    Mine = 4,           // getting halite
+    Flee = 4,           // moving away from an adjacent enemy
+    Mine = 5,           // getting halite
 };
 
 string desc(Purpose p);

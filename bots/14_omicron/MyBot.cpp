@@ -9,11 +9,12 @@
 #include "hlt/Network.h"
 #include "hlt/Grid.h"
 #include "hlt/Log.h"
+#include "hlt/Parameter.h"
 #include "hlt/Path.h"
 #include "hlt/Plan.h"
+#include "hlt/PlayerAnalyzer.h"
 #include "hlt/PosMap.h"
 #include "hlt/Util.h"
-#include "hlt/PlayerAnalyzer.h"
 using namespace std;
 
 // GLOBAL STATE
@@ -26,6 +27,11 @@ PosSet impassable(false);  // recomputed by set_impassable each turn
 // GLOBAL CONSTANTS
 const int TURNS_LEFT_TO_RETURN = 15;  // TUNE
 
+Parameter<double> MINE_MOVE_ON_MULT("MINE_MOVE_ON_MULT");
+Parameter<double> MINE_RATE_MULT("MINE_RATE_MULT");
+Parameter<double> LOW_HALITE_EFFICIENCY_PENALTY("LOW_HALITE_EFFICIENCY_PENALTY");
+Parameter<double> MINING_DIST_FROM_ME_MULT("MINING_DIST_FROM_ME_MULT");
+Parameter<int> MIN_DROPOFF_SEPARATION("MIN_DROPOFF_SEPARATION");
 
 void plan(const Ship &ship, Vec tgt, Purpose purpose)
 {
@@ -113,6 +119,7 @@ void set_impassable()
             if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
             if (enemy_is_cautious) {  // currently only ever true in 4p
+//            if (false) {  // can be useful to turn this off for testing
                 // This player generally doesn't move adjacent to opponents' ships.
                 // Let's only rely on this if they are currently not adjacent to one
                 // of their structures and also not adjacent to any of our ships (because
@@ -141,6 +148,14 @@ void set_impassable()
                 } else {  // 2-player games
                     impassable(pos) = !we_win_fight(pos);
                 }
+            }
+        }
+
+        // Consider enemy structures impassable if there is an adjacent ship of that player, 
+        // because there's a good chance that ship will hit us if we move onto the structure.
+        for (Vec s : enemy.structures) {
+            if (grid.smallest_dist(s, enemy.ships) <= 1) {
+                impassable(s) = true;
             }
         }
     }
@@ -179,10 +194,11 @@ void resolve_plans_into_commands(vector<Command> &commands)
 
     map<Vec, Plan> dest_to_plan;
 
+    // TODO: I think there is no point in this being a priority queue
     while (!q.empty()) {
         Plan p = q.top();
         q.pop();
-//        Log::flog(p.ship, "popped %s", +p.toString());
+        Log::flog(p.ship, "popped %s", +p.toString());
 
         // decide where this ship should move to act on its plan.
         // can only pick a move that doesn't interfere with an existing move
@@ -193,24 +209,47 @@ void resolve_plans_into_commands(vector<Command> &commands)
             move_dest = p.tgt;
         } else {  // plan calls for moving to some target
             // Plan a path that avoids any plans of equal or earlier priority.
-            //PosSet blocked_for_pathing(avoid_positions);
             PosSet blocked_for_pathing(impassable);
+            PosSet prefer_to_avoid(false);
+
+            // If we're evading a returner (which currently means just swapping with them)
+            // then don't consider their square blocked, even if it's, say, adjacent to an
+            // enemy. It's fine to risk an enemy collision in this case
+            if (p.purpose == Purpose::EvadeReturner && blocked_for_pathing(p.tgt)) {
+                Log::flog_color(p.ship.pos, 0, 0, 255, "EVADER BLOCKED!");
+                Log::flog_color(p.tgt, 0, 255, 255, "EVADER TGT!");
+            }
+            if (p.purpose == Purpose::EvadeReturner) blocked_for_pathing(p.tgt) = false;
+
             for (const pair<Vec, Plan> &vp : dest_to_plan) {
                 if (vp.second.purpose <= p.purpose) {
-                    // if you're a miner, don't consider returners' paths blocked except for adjacent squares.
-                    // the idea is that even if you run into them you'll just switch places; there's no point
-                    // trying to path around them. 
+                    // if you're a Returner, don't consider Stuck guys as obstacles
+                    if (p.purpose == Purpose::Return && vp.second.purpose == Purpose::Stuck) {
+                        continue;
+                    }
+
+                    // if you're a Miner or Returner, don't consider returners' paths blocked except for adjacent squares.
+                    // For Miners, if you run into them you'll just switch places; there's no point
+                    // trying to path around them. For Returners you'll probably never run into them. 
                     // might want to expand this to other cases? like, no point pathing around any very distant ships?
-                    if (p.purpose == Purpose::Mine && 
+                    if ((p.purpose == Purpose::Mine || p.purpose == Purpose::Return) && 
                         vp.second.purpose == Purpose::Return && 
                         grid.dist(vp.first, p.ship.pos) > 1) {
                         continue;
                     }
+
                     // otherwise, don't path over this square
                     blocked_for_pathing(vp.first) = true;
                 }
             }
-            Direction path_dir = Path::find(p.ship.pos, p.tgt, blocked_for_pathing);
+            //Direction path_dir = Path::find(p.ship.pos, p.tgt, blocked_for_pathing, prefer_to_avoid);
+            // TEST:
+            Direction path_dir;
+            if (p.purpose == Purpose::Return) {
+                path_dir = Path::find_low_halite(p.ship.pos, p.tgt, blocked_for_pathing);
+            } else {
+                path_dir = Path::find(p.ship.pos, p.tgt, blocked_for_pathing, prefer_to_avoid);
+            }
             move_dest = grid.add(p.ship.pos, path_dir);
         }
 //        Log::flog(p.ship, "move_dest = %s", +move_dest.toString());
@@ -220,12 +259,25 @@ void resolve_plans_into_commands(vector<Command> &commands)
         if (conflict_it != dest_to_plan.end()) {  // someone is
             Plan conflict = conflict_it->second;
 
+            // Returners don't bother to pathfind around Stuck ships. If our path tells us to 
+            // move onto a Stuck ship, we should instead stay still and say that we are Stuck too.
+            if (conflict.purpose == Purpose::Stuck) {
+                Log::flog_color(p.ship.pos, 0, 255, 0, "piling up behind a Stuck");
+                Log::flog_color(move_dest, 0, 0, 255, "I am the Stuck");
+                p.purpose = Purpose::Stuck;
+                p.tgt = p.ship.pos;
+                q.push(p);
+                continue;
+            }
+
             // If we came up with a non-Still move, it's guaranteed to avoid intefering
             // with any plans of equal or earlier priority. But it's possible that we're
             // staying still and that will interfere with a plan of earlier priority.
             if (move_dest == p.ship.pos && conflict.purpose < p.purpose) {
                 // It happened. We want to try to get out of that plan's way. Do this by promoting
                 // ourselves to an evasion purpose with an earlier priority.
+                // NOTE: I think currently this should never happen with conflict.purpose == Purpose::Flee,
+                // because we currently never flee onto a square occupied by an ally
                 if (!(p.purpose == Purpose::Mine && conflict.purpose == Purpose::Return)) {
                     Log::die("case AAA I thought shouldn't happen id1=%d id2=%d", p.ship.id, conflict.ship.id);
                 }
@@ -321,8 +373,6 @@ void plan_returning(const vector<Ship> &returners)
 
 void plan_mining(const vector<Ship> &miners)
 {
-    Log::log("plan_mining start");
-
     // Build a map of halite adjusted for inspiration and various incentives
     PosMap<double> effective_halite(0.0);
     for (Vec pos : grid.positions) effective_halite(pos) = grid(pos).halite;
@@ -387,13 +437,6 @@ void plan_mining(const vector<Ship> &miners)
         effective_halite(enemy_ship.pos) += 0.5 * enemy_ship.halite;  // TUNE
     }
 
-    // TEST: we'll remember each ship's expected halite rate, and use that to decide
-    // whether to move to a distant mining target, or stay where we are
-    map<int, double> sid_to_halite_rate;
-
-    //map<int, int> sid_to_base_dist;
-    //for (Ship s : Game::me->ships) sid_to_base_dist[s.id] = grid.smallest_dist(s.pos, Game::me->structures);
-
     PosMap<int> tgt_to_ship_id(-1);
     deque<Ship> q;
     std::copy(miners.begin(), miners.end(), std::back_inserter(q));
@@ -410,7 +453,7 @@ void plan_mining(const vector<Ship> &miners)
         Vec best_tgt = ship.pos;
         for (Vec pos : grid.positions) {
             if (impassable(pos)) continue;
-            const double halite = effective_halite(pos);
+            double halite = effective_halite(pos);
             if (halite <= 0) continue;
 
             const int dist_from_me = grid.dist(pos, ship.pos);
@@ -441,15 +484,16 @@ void plan_mining(const vector<Ship> &miners)
             // get (cell halite) / EXTRACT_RATIO halite per turn. And let's assume we can
             // mine at a similar rate from nearby cells. But multiply by a fudge factor of 0.7
             // because the halite decreases as we mine it. Then it'll take this long to fill up:
-            const double naive_mine_rate = 0.7 * halite * Constants::INV_EXTRACT_RATIO;  // TUNE
+            const double naive_mine_rate = MINE_RATE_MULT.get(0.7) * halite * Constants::INV_EXTRACT_RATIO;  // TUNE. in some tests, the 0.7 is not terrible
             // Let's try to account for the 
             // fact that when you mine many small squares instead of one big square, you have to waste
             // time and halite moving.
             // Let's say your mining rate is 50% slower that=n the naive calculation
-            const double efficiency = 0.5 + 0.5 * max(0.0, min((double)Constants::MAX_HALITE, halite)) / (double)Constants::MAX_HALITE;  // TUNE
+            const double low_halite_penalty = LOW_HALITE_EFFICIENCY_PENALTY.get(0.5);  // TUNE. 1.0 is bad. 0.0 is probably worse than 0.5
+            const double efficiency = (1.0 - low_halite_penalty) + low_halite_penalty * max(0.0, min((double)Constants::MAX_HALITE, halite)) / (double)Constants::MAX_HALITE;  // TUNE
             const double mine_rate = efficiency * naive_mine_rate;
             const double turns_to_fill_up = halite_needed / mine_rate;
-            const double total_time = turns_to_fill_up + dist_from_base + 2 * dist_from_me;  // TUNE
+            const double total_time = turns_to_fill_up + dist_from_base + MINING_DIST_FROM_ME_MULT.get(2.0) * dist_from_me;  // TUNE. MINING_DIST_FROM_ME_MULT 1.0 is worse than 2.0, 3.0 about the same as 1.0
             const double overall_halite_rate = halite_needed / total_time;
 
             if (overall_halite_rate > best_halite_rate) {
@@ -458,57 +502,35 @@ void plan_mining(const vector<Ship> &miners)
             }
         }
 
-        Log::flog(ship, "best_tgt = %s", +best_tgt.toString());
-
         // if our target is owned, kick out the owner
         const int owner_id = tgt_to_ship_id(best_tgt);
         if (owner_id != -1) {
-            Log::flog(ship, "(kicking out previous owner %d)", owner_id);
-            Log::flog(Game::me->id_to_ship.at(owner_id), "kicked out! by %d", ship.id);
             q.push_back(Game::me->id_to_ship.at(owner_id));
         }
         tgt_to_ship_id(best_tgt) = ship.id;
-        sid_to_halite_rate[ship.id] = best_halite_rate;
     }
 
     for (Vec tgt : grid.positions) {
         const int ship_id = tgt_to_ship_id(tgt);
         if (ship_id == -1) continue;
         const Ship ship = Game::me->id_to_ship.at(ship_id);
-        Log::flog(ship, "final mining tgt: %s", +tgt.toString());
-
-        /*if (ship.halite > 500 && (grid.dist(ship.pos, tgt) > 2 + grid.smallest_dist(ship.pos, Game::me->structures))) {
-            Log::flog_color(ship.pos, 255, 255, 0, "going to far square %s", +tgt.toString());
-            Log::flog_color(tgt, 0, 255, 255, "far dest of %d", ship.id);
-        }*/
 
         if (ship.pos == tgt) {
-            Log::flog(ship, "mining tgt is here!");
             plan(ship, ship.pos, Purpose::Mine);
         } else {  // tgt is not the current position
             // decide whether to actually move toward the target
             const double tgt_eff_halite = effective_halite(tgt);
             const double here_eff_halite = effective_halite(ship.pos);
-//            Log::flog(ship, "tgt_eff_halite = %f", tgt_eff_halite);
-//            Log::flog(ship, "here_eff_halite = %f", here_eff_halite);
-//            const double stay_halite_rate = here_eff_halite * Constants::INV_EXTRACT_RATIO;  // halite/turn over 1 turn of staying
-//            const double go_halite_rate = sid_to_halite_rate.at(ship_id);  // calculated halite/turn of going to tgt
-//            const double h_ratio = tgt_eff_halite/(double)here_eff_halite;
-//            Log::flog(ship, "stay_halite_rate = %f", stay_halite_rate);
-//            Log::flog(ship, "go_halite_rate = %f", go_halite_rate);
-//            Log::flog(ship, "tgt/here halite ratio = %f", h_ratio);
 
             // tune the factor here
-            if (tgt_eff_halite > 3.0 * here_eff_halite) {  // TUNE
-                Log::flog(ship, "going to move toward mining target %s", +tgt.toString());
+            if (tgt_eff_halite > MINE_MOVE_ON_MULT.get(3.0) * here_eff_halite) {  // TUNE
+//            if (tgt_eff_halite > 3.0 * here_eff_halite) {  // TUNE
                 plan(ship, tgt, Purpose::Mine);
             } else {
-                Log::flog(ship, "staying at %s", +ship.pos.toString());
                 plan(ship, ship.pos, Purpose::Mine);
             }
         }
     }
-    Log::log("plan_mining end");
 }
 
 
@@ -547,7 +569,7 @@ void consider_making_dropoff(vector<Command> &commands)
 
     for (Vec pos : grid.positions) {
         // don't build structures too close together
-        if (dist_to_structure(pos) < 17) continue;  // TUNE
+        if (dist_to_structure(pos) < MIN_DROPOFF_SEPARATION.get(17)) continue;  // TUNE. did so briefly, 17 seems OK
 
         // can't build on top of enemy structures
         if (dist_to_enemy_structure(pos) == 0) continue;
@@ -638,7 +660,7 @@ void consider_ramming(vector<Command> &commands)
             if (grid.dist(my_ship.pos, enemy_ship.pos) != 1) continue;            
             if (!can_move(my_ship)) continue;
             if (busy_ship_ids.count(my_ship.id)) continue;
-            if (my_ship.halite >= 1.0 * enemy_ship.halite) continue;  // TUNE. TODO: maybe relax this condition when we heavily outnumber?
+            if (my_ship.halite >= enemy_ship.halite) continue;  // TUNE. TODO: maybe relax this condition when we heavily outnumber?
 
             if (my_ship.halite < best_rammer.halite) {
                 best_rammer = my_ship;
@@ -661,10 +683,14 @@ void consider_fleeing()
 {
     if (Game::num_players != 2) return;
 
+    PosSet used_flee_dests(false);
+
     for (Ship ship : Game::me->ships) {
         if (busy_ship_ids.count(ship.id)) continue;
         if (returning_ship_ids.count(ship.id)) continue;  // returning ships will already path to avoid enemies
         if (!impassable(ship.pos)) continue;  // this location is apparently fine, don't flee
+
+        // TODO: DONT JUST FLEE IF ITS IMPASSABLE! WE SHOULD ACTUALLY BE OUTNUMBERED BEFORE WE FLEE!
 
         //Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
 
@@ -675,6 +701,7 @@ void consider_fleeing()
         bool found_dest = false;
         for (int d = 0; d < 4; ++d) {
             Vec adj = grid.add(ship.pos, (Direction)d);
+            if (used_flee_dests(adj)) continue;  // another ship is already fleeing to this square!
             const int ally_dist = grid.smallest_dist_except(adj, Game::me->ships, ship);
             if (ally_dist == 0) continue; // don't move onto ally positions. TODO: relax this
             // pass on this location if it's worse than an existing one
@@ -691,7 +718,8 @@ void consider_fleeing()
         }
         if (found_dest) {
             Log::flog(ship.pos, "fleeing to %s", +best_dest.toString());
-            plan(ship, best_dest, Purpose::Mine);
+            plan(ship, best_dest, Purpose::Flee);
+            used_flee_dests(best_dest) = true;
             busy_ship_ids.insert(ship.id);
         }
     }
@@ -776,15 +804,19 @@ vector<Command> turn()
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
     Network::init();
+
+    MINE_MOVE_ON_MULT.parse(argc, argv);
+    MINE_RATE_MULT.parse(argc, argv);
+    LOW_HALITE_EFFICIENCY_PENALTY.parse(argc, argv);
+    MINING_DIST_FROM_ME_MULT.parse(argc, argv);
+    MIN_DROPOFF_SEPARATION.parse(argc, argv);
 
     // start the main game loop
     while (true) {
         Network::begin_turn();
-
-
 
         vector<Command> commands = turn();
 
