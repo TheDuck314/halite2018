@@ -118,8 +118,8 @@ void set_impassable()
             // or they'll block us from delivering. it's fine to ram them.
             if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-            if (enemy_is_cautious) {  // currently only ever true in 4p
-//            if (false) {  // can be useful to turn this off for testing
+//            if (enemy_is_cautious) {  // currently only ever true in 4p
+            if (false) {  // can be useful to turn this off for testing
                 // This player generally doesn't move adjacent to opponents' ships.
                 // Let's only rely on this if they are currently not adjacent to one
                 // of their structures and also not adjacent to any of our ships (because
@@ -331,11 +331,9 @@ bool shipyard_will_be_clear(const vector<Command> &commands)
         const Vec src = Game::me->id_to_ship[c.ship_id].pos;
         const Vec dest = grid.add(src, c.move_dir);
         if (dest == Game::me->shipyard) {
-            Log::log("shipyard won't be empty b/c ship at %s is moving onto it", +src.toString());
             return false;
         }
     }
-    Log::log("shipyard will be clear!");
     return true;
 }
 
