@@ -52,12 +52,17 @@ final rank=1 or 2, μ=87.52 σ=0.43 at 20181101 11:31pm
   Mu's "should I flee" code is exactly the same as Lambda's "should I attack" code.
 
 v23 12_nu
-still playing rank=1 μ=89.19 σ=0.57 at 20181102 7:52pm
 final rank=1 μ=89.25 σ=0.54 at 20181103 at 3:25am
 - condition for passability/attack/flee is that # non-returning allies > # enemies in Manhattan radius 4
   this was 100% winrate against Mu in 2p
 
 v24 13_xi
-- tiny "fix" that doesn't matter: don't pick mining targets such that we'll immediately have to collapse once we get there b/c of game ending
 - in 4p games, we observe whether each other player is too cautious to go next to enemy ships, and exploit the cautious enemies by
   allowing ourselves to move next to them. gives like 85% 4p winrate against Nu, but it's tuned against Nu so this may be optimistic.
+
+work in progress v25 14_omicron
+REMEMBER THAT YOU MUST REENABLE CAUTIOSNESS-EXPLOITATION BEFORE UPLOADING!
+- consider enemy structures impassable if that player has an adjacent ship
+- when evading a returner, we never consider that returner's square as blocked
+
+
