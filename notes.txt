@@ -46,6 +46,8 @@ multiple ships can try to flee onto the same square, which is dumb
 
 we still don't actually flee onto impasable squares
 
+try making the planning priority queue just a regular queue.
+
 I think I might be building too many ships on 2p maps, specifically when there's not much halite left
 
 vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv

@@ -57,15 +57,19 @@ final rank=1 μ=89.25 σ=0.54 at 20181103 at 3:25am
   this was 100% winrate against Mu in 2p
 
 v24 13_xi
+final rank=1 μ=90.52 σ=about 0.7? at 20181104 at 2:58am
 - in 4p games, we observe whether each other player is too cautious to go next to enemy ships, and exploit the cautious enemies by
   allowing ourselves to move next to them. gives like 85% 4p winrate against Nu, but it's tuned against Nu so this may be optimistic.
 
-work in progress v25 14_omicron
-REMEMBER THAT YOU MUST REENABLE CAUTIOUSNESS-EXPLOITATION BEFORE UPLOADING!
+v25 14_omicron
 - consider enemy structures impassable if that player has an adjacent ship
 - when evading a returner, we never consider that returner's square as blocked
 - returners don't consider Stuck ships as obstacles; if they end up pathing through one they just stay Stuck for a turn too
 - returners find the lowest halite path that's also a min-distance path
 - don't give two ships the same flee dest
+- Flee is now its own purpose with higher priority than Mine
+Test results against Xi with cautiousness-exploitation turned off in both:
+    Omicron    2p:  67-17    4p:  77-38-39-21
+
 
 

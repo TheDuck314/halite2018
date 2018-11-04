@@ -82,7 +82,7 @@ print("{} non-challenge games".format(len(my_stats)))
 my_stats = pd.DataFrame(my_stats)
 #print(my_stats)
 
-version = 24
+version = 25
 my_stats = my_stats[my_stats.MyVersion == version]
 print("{} games for version {}".format(len(my_stats), version))
 
