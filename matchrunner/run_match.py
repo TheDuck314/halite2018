@@ -22,6 +22,7 @@ BOT_COMMANDS = {
     "Xi":      "/home/greg/coding/halite/2018/repo/bots/13_xi/build/MyBot",
     "Omicron": "/home/greg/coding/halite/2018/repo/bots/14_omicron/build/MyBot",
     "Pi":      "/home/greg/coding/halite/2018/repo/bots/15_pi/build/MyBot",
+    "Rho":     "/home/greg/coding/halite/2018/repo/bots/16_rho/build/MyBot",
 }
 
 def run_game(game_dir, seed, bots):
@@ -99,8 +100,8 @@ def main():
     parser.add_argument("-p", "--players", type=int, help="force a given number of players")
     args = parser.parse_args()
 
-    challenger_bots = ["Pi"]
-    ref_bot = "Omicron"
+    challenger_bots = ["Rho"]
+    ref_bot = "Pi"
     """
     challenger_base = "Pi"
     param = "MIN_HALITE_PER_SHIP_TO_SPAWN_4P"

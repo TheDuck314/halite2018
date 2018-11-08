@@ -9,6 +9,31 @@ I think I really could benefit from
 
 figure out why so many ships got stuck in https://halite.io/play/?game_id=1529637&replay_class=1&replay_name=replay-20181107-071034%2B0000-1541574463-56-56-1529637
 
+consider decreasing min-dist-to-enemy-dropff!
+
+recent reasons for losing:
+someone made a dropoff too near where I wanted one, so I built a really crappy dropoff instead
+subpar fleeing?
+
+this dropoff looks awful
+https://halite.io/play/?game_id=1533690&replay_class=1&replay_name=replay-20181107-091956%2B0000-1541581559-48-48-1533690
+
+THIS SHOULD BE HIGH PRIORITY:
+I really need to able to flee onto allies' squares by pushing them off
+
+consider_fleeing() is attracted to the closest ally, but if that ally also needs to flee this could screw over that ally by stealing its spot!
+Maybe need an iterated fleeing system like plan_mining.
+It could maybe pre-resolve the case of "I want to flee onto an ally's square" so that resolve_plans_into_commands doesn't have to do that!
+Or, maybe resolve_plans_into_commands is the right place
+
+"Flee towards closest ally" is a pretty dumb heuristic
+
+Every collision probably represents a mistake
+
+late game 4p aggression can be turned way up!
+
+can we be more assertive in 4p? change the "safety" threshold? fit a model offline or online to predict whether they'll move onto a given square?
+
 my returners are ramming people on the way home at the end in 4p, which is idiotic
 
 could have a whole queue-based flee planning system analogous to plan_mining, which could help
