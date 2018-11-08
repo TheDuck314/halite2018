@@ -101,7 +101,10 @@ bool we_win_fight_4p(Vec pos)
         num_allies += 1;
     }
 
-    return num_enemies <= 1 && num_allies >= 2;  // TUNE
+    //return num_enemies <= 1 && num_allies >= 2;  // TUNE
+    return  (num_enemies <= 1 && num_allies >= 2) ||
+            (num_enemies == 2 && num_allies >= 4) ||
+            (num_enemies == 3 && num_allies >= 6);
 }
 
 
@@ -119,8 +122,8 @@ void set_impassable()
             // or they'll block us from delivering. it's fine to ram them.
             if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//            if (enemy_is_cautious) {  // currently only ever true in 4p
-            if (false) {  // can be useful to turn this off for testing
+            if (enemy_is_cautious) {  // currently only ever true in 4p
+//            if (false) {  // can be useful to turn this off for testing
                 // This player generally doesn't move adjacent to opponents' ships.
                 // Let's only rely on this if they are currently not adjacent to one
                 // of their structures and also not adjacent to any of our ships (because
@@ -148,6 +151,10 @@ void set_impassable()
                     //impassable(pos) = true;
                     // TEST
                     impassable(pos) = !we_win_fight_4p(pos);
+//                    if (Game::turns_left() <= 100) {
+//                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
+//                        else Log::flog_color(pos, 0, 125, 0, "passable");
+//                    }
                 } else {  // 2-player games
                     impassable(pos) = !we_win_fight(pos);
                 }
@@ -212,6 +219,12 @@ void resolve_plans_into_commands(vector<Command> &commands)
             PosSet blocked_for_pathing(impassable);
             PosSet prefer_to_avoid(false);
 
+            // consider_fleeing() may decide to flee onto a nominally "impassable" square.
+            // Here we should just trust it and not consider any square impassable for Fleeing.
+            if (p.purpose == Purpose::Flee) {
+                blocked_for_pathing.fill(false);
+            }
+
             // If we're evading a returner (which currently means just swapping with them)
             // then don't consider their square blocked, even if it's, say, adjacent to an
             // enemy. It's fine to risk an enemy collision in this case
@@ -221,6 +234,7 @@ void resolve_plans_into_commands(vector<Command> &commands)
             }
             if (p.purpose == Purpose::EvadeReturner) blocked_for_pathing(p.tgt) = false;
 
+            // don't path over the dests of earlier priority plans
             for (const pair<Vec, Plan> &vp : dest_to_plan) {
                 if (vp.second.purpose <= p.purpose) {
                     // if you're a Returner, don't consider Stuck guys as obstacles
@@ -242,10 +256,21 @@ void resolve_plans_into_commands(vector<Command> &commands)
                     blocked_for_pathing(vp.first) = true;
                 }
             }
-            //Direction path_dir = Path::find(p.ship.pos, p.tgt, blocked_for_pathing, prefer_to_avoid);
-            // TEST:
+
+            // TEST HACK:
+            // if you're a returner, all squares occupied by enemies are impassable, if they're not on one of our structures
+            // commented out b/c somehow it didn't help in self play
+            /*if (p.purpose == Purpose::Return) {
+                for (Ship enemy_ship : Game::enemy_ships) {
+                    if (Game::me->has_structure_at(enemy_ship.pos)) continue;
+                    blocked_for_pathing(enemy_ship.pos) = true;
+                }
+            }*/
+
             Direction path_dir;
             if (p.purpose == Purpose::Return) {
+                // Returners use special pathing that finds the lowest halite minimum distance
+                // path so they burn less halite
                 path_dir = Path::find_low_halite(p.ship.pos, p.tgt, blocked_for_pathing);
             } else {
                 path_dir = Path::find(p.ship.pos, p.tgt, blocked_for_pathing, prefer_to_avoid);
@@ -283,6 +308,8 @@ void resolve_plans_into_commands(vector<Command> &commands)
                 }
                 // for now, let's just swap places with the guy who's coming onto our square.
                 // this should be guaranteed to succeed.
+                // TODO: It won't be guaranteed if, in the future, we have a priority that's earlier than
+                // Return and can move onto a Returner's square. For example we should make Flee do this.
                 p.purpose = Purpose::EvadeReturner;
                 p.tgt = conflict.ship.pos;
                 q.push_back(p);
@@ -571,7 +598,7 @@ void consider_making_dropoff(vector<Command> &commands)
         // is to any of our structures, unless there are no nearby enemy ships
         // in a big radius        
         if (dist_to_enemy_structure(pos) <= dist_to_structure(pos) && dist_to_enemy_ship(pos) < 20) continue;  // TUNE
-
+        
         const int radius = 7;  // TUNE
         int new_halite_in_radius = 0;
         int old_halite_in_radius = 0;
@@ -622,8 +649,12 @@ void consider_making_dropoff(vector<Command> &commands)
             // can build, so do it
             commands.push_back(Command::construct(ship.id));
         } else {
-            // can't build yet; chill out
-            commands.push_back(Command::stay(ship));
+            // Can't build yet; chill out.
+            // Put this in the planning system so other ships path around us.
+            // Purpose::Return is a hack, just want an early priority.
+            // Purpose::Stuck would be bad b/c ships would try to wait for us to get unstuck instead
+            // of pathing around.
+            plan(ship, best_pos, Purpose::Return);
         }
     } else {
         // not there yet; move toward the target
@@ -660,8 +691,6 @@ void consider_ramming(vector<Command> &commands)
         }
         if (best_rammer.id != -1) {
             // ramming speed!
-            //Direction d = grid.adj_dir(best_rammer.pos, enemy_ship.pos);
-            //commands.push_back(Command::move(best_rammer, d));
             busy_ship_ids.insert(best_rammer.id);
             // go through the planning system so other ships know to avoid this square
             plan(best_rammer, enemy_ship.pos, Purpose::Ram);
@@ -679,12 +708,13 @@ void consider_fleeing()
 
     for (Ship ship : Game::me->ships) {
         if (busy_ship_ids.count(ship.id)) continue;
-        if (returning_ship_ids.count(ship.id)) continue;  // returning ships will already path to avoid enemies
+        if (returning_ship_ids.count(ship.id)) continue;  // returning ships will already path to avoid enemies. except, not necessarily??
+        if (!can_move(ship)) continue;
         if (!impassable(ship.pos)) continue;  // this location is apparently fine, don't flee
 
         // TODO: DONT JUST FLEE IF ITS IMPASSABLE! WE SHOULD ACTUALLY BE OUTNUMBERED BEFORE WE FLEE!
 
-        //Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
+        Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
 
         // be afraid!
         // try to move toward a location ranked by passability, then ally distance
@@ -696,6 +726,8 @@ void consider_fleeing()
             if (used_flee_dests(adj)) continue;  // another ship is already fleeing to this square!
             const int ally_dist = grid.smallest_dist_except(adj, Game::me->ships, ship);
             if (ally_dist == 0) continue; // don't move onto ally positions. TODO: relax this
+            const int enemy_dist = grid.smallest_dist(adj, Game::enemy_ships);
+            if (enemy_dist == 0) continue; // don't move onto enemy positions. TODO: it might not be totally crazy to try to swap with the enemy??
             // pass on this location if it's worse than an existing one
             if (found_dest) {
                 // prefer passable locations
@@ -710,6 +742,12 @@ void consider_fleeing()
         }
         if (found_dest) {
             Log::flog(ship.pos, "fleeing to %s", +best_dest.toString());
+            if (grid.smallest_dist(best_dest, Game::enemy_ships) == 0) {
+                Log::flog_color(best_dest, 255, 0, 0, "THIS SHIT IS CRAZY");
+            }
+            if (impassable(best_dest)) {
+                Log::flog_color(best_dest, 255, 0, 255, "FLEEING TO IMPASSABLE SQUARE");
+            }
             plan(ship, best_dest, Purpose::Flee);
             used_flee_dests(best_dest) = true;
             busy_ship_ids.insert(ship.id);
