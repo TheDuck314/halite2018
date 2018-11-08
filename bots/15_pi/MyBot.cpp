@@ -31,6 +31,7 @@ Parameter<double> MINE_MOVE_ON_MULT("MINE_MOVE_ON_MULT");
 Parameter<double> MINE_RATE_MULT("MINE_RATE_MULT");
 Parameter<double> LOW_HALITE_EFFICIENCY_PENALTY("LOW_HALITE_EFFICIENCY_PENALTY");
 Parameter<double> MINING_DIST_FROM_ME_MULT("MINING_DIST_FROM_ME_MULT");
+Parameter<double> MIN_HALITE_PER_SHIP_TO_SPAWN_4P("MIN_HALITE_PER_SHIP_TO_SPAWN_4P");
 Parameter<int> MIN_DROPOFF_SEPARATION("MIN_DROPOFF_SEPARATION");
 
 void plan(const Ship &ship, Vec tgt, Purpose purpose)
@@ -56,7 +57,7 @@ bool should_spawn()
     // check if we already have plenty of ships
     if (Game::num_players != 2) {
         if (Game::turns_left() < 200) return false;  // TUNE
-        if (halite_left < 3500 * (int)Game::me->ships.size()) return false;  // TUNE
+        if (halite_left < MIN_HALITE_PER_SHIP_TO_SPAWN_4P.get(2000) * (int)Game::me->ships.size()) return false;  // TUNE
     } else { // two players
         if (Game::turns_left() < 140) return false;  // TUNE
         if (halite_left < 2500 * (int)Game::me->ships.size()) return false;  // TUNE
@@ -85,7 +86,7 @@ bool we_win_fight(Vec pos)
 
 bool we_win_fight_4p(Vec pos)
 {
-    if (Game::turns_left() > 75) return false;
+    if (Game::turns_left() > 100) return false;
 
     const int R = 4;  // TUNE
     const int num_enemies = grid.num_within_dist(pos, Game::enemy_ships, R);
@@ -95,7 +96,7 @@ bool we_win_fight_4p(Vec pos)
     int num_allies = 0;
     for (Ship ally : Game::me->ships) {
         if (grid.dist(ally.pos, pos) > R) continue;
-        if (ally.halite > 300) continue;  // TUNE
+        if (ally.halite > 600) continue;  // TUNE
         if (exclude_returners && returning_ship_ids.count(ally.id)) continue;
         num_allies += 1;
     }
@@ -118,8 +119,8 @@ void set_impassable()
             // or they'll block us from delivering. it's fine to ram them.
             if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//            if (enemy_is_cautious) {  // currently only ever true in 4p
-            if (false) {  // can be useful to turn this off for testing
+            if (enemy_is_cautious) {  // currently only ever true in 4p
+//            if (false) {  // can be useful to turn this off for testing
                 // This player generally doesn't move adjacent to opponents' ships.
                 // Let's only rely on this if they are currently not adjacent to one
                 // of their structures and also not adjacent to any of our ships (because
@@ -144,7 +145,9 @@ void set_impassable()
                 if (Game::num_players != 2) {
                     // in 4-player games we'll currently be very pacifist and avoid moving
                     // next to an enemy (if that enemy-is-cautious stuff didn't apply).
-                    impassable(pos) = true;
+                    //impassable(pos) = true;
+                    // TEST
+                    impassable(pos) = !we_win_fight_4p(pos);
                 } else {  // 2-player games
                     impassable(pos) = !we_win_fight(pos);
                 }
@@ -187,17 +190,14 @@ void make_final_collapse_commands(vector<Command> &commands)
 
 void resolve_plans_into_commands(vector<Command> &commands)
 {
-    // priority queue of plans with lowest (earliest) purpose coming first.
-    auto pri_cmp = [](Plan a, Plan b) { return a.purpose < b.purpose; };
-    priority_queue<Plan, vector<Plan>, decltype(pri_cmp)> q(pri_cmp);
-    for (Plan p : plans) q.push(p);
+    deque<Plan> q;
+    std::copy(plans.begin(), plans.end(), std::back_inserter(q));
 
     map<Vec, Plan> dest_to_plan;
 
-    // TODO: I think there is no point in this being a priority queue
     while (!q.empty()) {
-        Plan p = q.top();
-        q.pop();
+        Plan p = q.front();
+        q.pop_front();
         Log::flog(p.ship, "popped %s", +p.toString());
 
         // decide where this ship should move to act on its plan.
@@ -266,7 +266,7 @@ void resolve_plans_into_commands(vector<Command> &commands)
                 Log::flog_color(move_dest, 0, 0, 255, "I am the Stuck");
                 p.purpose = Purpose::Stuck;
                 p.tgt = p.ship.pos;
-                q.push(p);
+                q.push_back(p);
                 continue;
             }
 
@@ -285,7 +285,7 @@ void resolve_plans_into_commands(vector<Command> &commands)
                 // this should be guaranteed to succeed.
                 p.purpose = Purpose::EvadeReturner;
                 p.tgt = conflict.ship.pos;
-                q.push(p);
+                q.push_back(p);
 //                Log::flog(p.ship, "can't stay still b/c of ship id %d. going to evade.", conflict.ship.id);
                 continue;
             }
@@ -296,7 +296,7 @@ void resolve_plans_into_commands(vector<Command> &commands)
             // So if there's a conflict, we win and the other guy has to re-plan
 //            Log::flog(p.ship, "I win the conflict with ship id %d", conflict.ship.id);
 //            Log::flog(conflict.ship, "Forced to replan by ship id %d", p.ship.id);
-            q.push(conflict);
+            q.push_back(conflict);
         }
 
         // If we get here, we get to go to move_dest, at least for now
@@ -369,6 +369,21 @@ void plan_returning(const vector<Ship> &returners)
     }
 }
 
+
+int compute_turns_to_fill_up(int ship_halite, int square_halite)
+{
+    if (ship_halite + square_halite < Constants::MAX_HALITE) Log::die("%d %d will never fill up", ship_halite, square_halite);
+    int turns = 0;
+    while (ship_halite < Constants::MAX_HALITE) {
+        int amt_mined = (square_halite + Constants::EXTRACT_RATIO - 1) / Constants::EXTRACT_RATIO;  // divide and roun dup
+        ship_halite += amt_mined;
+        square_halite -= amt_mined;
+        turns += 1;
+    }
+    return turns;
+}
+
+
 void plan_mining(const vector<Ship> &miners)
 {
     // Build a map of halite adjusted for inspiration and various incentives
@@ -403,31 +418,6 @@ void plan_mining(const vector<Ship> &miners)
         }
     }
     
-
-    // In four-player games it's probably good to try to mine in the general vicinity of
-    // enemies. This should help attract them so they can get inspired, and then we can
-    // get inspired too. 
-    // First pass: let's implement this as a halite multiplier that's a function of distance
-    // from enemy bases, but which goes away once someone builds a dropoff
-    /*int total_dropoff_count = 0;
-    IF YOU UNCOMMENT THIS CHANGE IT TO JUST MODIFY effective_halite
-    for (const Player &p : Game::players) total_dropoff_count += p.dropoffs.size();
-    if (Game::num_players == 4 && total_dropoff_count == 0) {
-        for (Vec pos : grid.positions) {
-            const int enemy_base_dist = grid.smallest_dist(pos, Game::enemy_structures);
-            double mult;
-            if (enemy_base_dist <= 10) {
-                mult = 1.5;                
-            } else if (enemy_base_dist <= 20) {
-                mult = 1.0 + 0.05 * (20 - enemy_base_dist);
-            } else {
-                mult = 1.0;
-            }
-            enemy_base_dist_multiplier(pos) = mult;
-            //Log::flog(pos, "enemy_base_dist=%d<br/>enemy_base_dist_multiplier=%f", enemy_base_dist, enemy_base_dist_multiplier(pos));
-        }
-    }*/
-
     // Halite in enemy ships will partially count toward increasing the effective halite on
     // the square. This will only have an effect if we consider the square passable, in which
     // case it will be an incentive to ram loaded enemy ships
@@ -520,9 +510,13 @@ void plan_mining(const vector<Ship> &miners)
             const double tgt_eff_halite = effective_halite(tgt);
             const double here_eff_halite = effective_halite(ship.pos);
 
+            //const int here_true_halite = grid(ship.pos).halite;
+            //if (grid(ship.pos).halite + ship.halite >= Constants::MAX_HALITE) {
+            //    Log::flog_color(ship.pos, 255, 0, 255, "turns to fill up = %d", compute_turns_to_fill_up(ship.halite, here_true_halite));
+            //}
+
             // tune the factor here
             if (tgt_eff_halite > MINE_MOVE_ON_MULT.get(3.0) * here_eff_halite) {  // TUNE
-//            if (tgt_eff_halite > 3.0 * here_eff_halite) {  // TUNE
                 plan(ship, tgt, Purpose::Mine);
             } else {
                 plan(ship, ship.pos, Purpose::Mine);
@@ -810,6 +804,7 @@ int main(int argc, char **argv)
     MINE_RATE_MULT.parse(argc, argv);
     LOW_HALITE_EFFICIENCY_PENALTY.parse(argc, argv);
     MINING_DIST_FROM_ME_MULT.parse(argc, argv);
+    MIN_HALITE_PER_SHIP_TO_SPAWN_4P.parse(argc, argv);
     MIN_DROPOFF_SEPARATION.parse(argc, argv);
 
     // start the main game loop
