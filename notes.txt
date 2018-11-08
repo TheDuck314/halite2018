@@ -1,13 +1,34 @@
 NOTES ON COMBAT
 - Rachol probably prefers to ram high-halite ships with low-halite ships, which does sound good
+- Rachol is ramming late-game in 4p. And maybe prefers to ram the leader? Or at any rate strategically chooses who to go after
 
 I think I really could benefit from
  - prefer to choose mining locations near good dropoffs
  - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
+ - prefer to make dropoffs near miners
+
+figure out why so many ships got stuck in https://halite.io/play/?game_id=1529637&replay_class=1&replay_name=replay-20181107-071034%2B0000-1541574463-56-56-1529637
+
+my returners are ramming people on the way home at the end in 4p, which is idiotic
+
+could have a whole queue-based flee planning system analogous to plan_mining, which could help
+if flee-ers are infering with each other.
+
+Consider evasion in 4p. Might want to first write something to check whether a player has rammed in this game (not trivial)
+
+in 4p, avoid collisions in the last few rounds before we'll need to collapse
+
+probably something to be gotten by not ramming with high-halite ships
+
+do I need more ships in 4p? the justification for my current heuristic neglects the
+fact that you're going to get a lot of free halite from inspiration that's not actually on the map
+
 
 maybe need some repulsion in mining targets
 
 dropoff distance penalty may be too heavy handed. or not heavy handed enough! tune it.
+
+tune the bonus for returning to a richer dropoff
 
 need some hysteresis in dropoff location choice
 
@@ -47,6 +68,9 @@ spend tons of time getting there. that suggests there should be benefits from:
  - anticipating the dropoff location and preferring to mine near there
  - preferring to build the dropoffs closer to base, and closer to our ships
 
+some logical checks we can do in mining:
+ - is staying here to fill up guaranteed to be strictly faster than going wherever we're going?
+
 vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 - when choosing mining target ships should take into account expected mining rate of *next* trip.
   that is, consider returning to all possible dropoffs, and consider the return time & expected next-trip mining rate,
@@ -84,6 +108,19 @@ it valid to have a second guy choose it as a mining target, using a lowered hali
 
 think more about preferring to mine near enemies in 4p games, even when there isn't instantaneous inspiration. there's an NAP-like idea here
 
+
+
+
+
+
+Notes on tuning the 4p ship-spawning condition:
+                Pi.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=2500    2p:   0- 0    4p:  66-54-65-38
+                Pi.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=3500    2p:   0- 0    4p:  157-169-158-185
+
+
+Results of letting us consider squares passable in the last 100 turns of 4p using we_win_fight_4p
+                                                     Pi    2p:   0- 0    4p:  62-32-21-14
+                                                Omicron    2p:   0- 0    4p:  67-97-108-115
 
 
 

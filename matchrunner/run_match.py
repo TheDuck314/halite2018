@@ -21,6 +21,7 @@ BOT_COMMANDS = {
     "Nu":      "/home/greg/coding/halite/2018/repo/bots/12_nu/build/MyBot",
     "Xi":      "/home/greg/coding/halite/2018/repo/bots/13_xi/build/MyBot",
     "Omicron": "/home/greg/coding/halite/2018/repo/bots/14_omicron/build/MyBot",
+    "Pi":      "/home/greg/coding/halite/2018/repo/bots/15_pi/build/MyBot",
 }
 
 def run_game(game_dir, seed, bots):
@@ -98,12 +99,12 @@ def main():
     parser.add_argument("-p", "--players", type=int, help="force a given number of players")
     args = parser.parse_args()
 
-    challenger_bots = ["Omicron"]
-    ref_bot = "Xi"
+    challenger_bots = ["Pi"]
+    ref_bot = "Omicron"
     """
-    challenger_base = "Omicron"
-    param = "MINING_DIST_FROM_ME_MULT"
-    values = [3.0, 2.0]
+    challenger_base = "Pi"
+    param = "MIN_HALITE_PER_SHIP_TO_SPAWN_4P"
+    values = [2000, 3500]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -115,6 +116,7 @@ def main():
     """
 
     bots = challenger_bots + [ref_bot]
+    assert challenger_bots
 
     bot_to_stats = {}
     for bot in bots:

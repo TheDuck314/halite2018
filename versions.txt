@@ -62,6 +62,7 @@ final rank=1 μ=90.52 σ=about 0.7? at 20181104 at 2:58am
   allowing ourselves to move next to them. gives like 85% 4p winrate against Nu, but it's tuned against Nu so this may be optimistic.
 
 v25 14_omicron
+final rank=1 μ=91.67 σ=0.47 at 20181107 12:02am
 - consider enemy structures impassable if that player has an adjacent ship
 - when evading a returner, we never consider that returner's square as blocked
 - returners don't consider Stuck ships as obstacles; if they end up pathing through one they just stay Stuck for a turn too
@@ -71,5 +72,11 @@ v25 14_omicron
 Test results against Xi with cautiousness-exploitation turned off in both:
     Omicron    2p:  67-17    4p:  77-38-39-21
 
+v26 15_pi
+- crude combat late in 4p. With <= 100 turns left, consider enemies passable under some strict conditions. consider_ramming() is still not used in 4p.
+  This gave 62-32-21-14 against Omicron.
+- make more ships in 4p. requirement is ships * 2000 < halite left, down from 3500. Seems logical, looking at games. I was making many fewer ships in games I lost,
+  and average profit/ship was like 2000 from the point where I stopped making ships, which seems too high.
+  This gave 26-19-15-13 against Pi using 3500.
 
 

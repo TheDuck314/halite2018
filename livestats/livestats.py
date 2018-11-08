@@ -9,7 +9,7 @@ my_userid = 3191; my_username = "TheDuck314"; only_version = -1
 
 games_per_request = 250  # 250 is api max I think
 response = []
-for i in range(2):
+for i in range(3):
     url = "https://api.2018.halite.io/v1/api/user/{}/match?order_by=desc,time_played&limit={}&offset={}".format(my_userid, games_per_request, i * games_per_request)
     print(url)
     response.extend(requests.get(url).json())
@@ -108,7 +108,7 @@ def show_stats(stats, title):
 
 show_stats(my_stats, "overall")
 
-for opp in ["TheDuck314", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
+for opp in ["TheDuck314", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "teccles", "ArtemisFowl17"]:
     if opp == my_username:
         continue
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))
