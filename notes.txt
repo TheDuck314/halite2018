@@ -7,6 +7,10 @@ I think I really could benefit from
  - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
  - prefer to make dropoffs near miners
 
+tony maybe builds for longer? to 1000 halite/ship maybe?
+
+optimal ship stopping probably depends on map size? on small maps, everyone's probably inspired all the time and you can build later
+
 figure out why so many ships got stuck in https://halite.io/play/?game_id=1529637&replay_class=1&replay_name=replay-20181107-071034%2B0000-1541574463-56-56-1529637
 
 consider decreasing min-dist-to-enemy-dropff!

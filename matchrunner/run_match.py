@@ -25,13 +25,18 @@ BOT_COMMANDS = {
     "Rho":     "/home/greg/coding/halite/2018/repo/bots/16_rho/build/MyBot",
 }
 
-def run_game(game_dir, seed, bots):
+def run_game(game_dir, seed, mapsize, bots):
     command = [
         HALITE_BINARY,
         "--results-as-json",
         "-s", str(seed),
         "--replay-directory", game_dir,
     ]
+    if mapsize:
+        command.extend([
+            "--width", str(mapsize),
+            "--height", str(mapsize),
+        ])
 
     for bot in bots:
         command.append(BOT_COMMANDS[bot])
@@ -60,12 +65,12 @@ def worker(input_q, output_q, match_dir):
     """ runs games indefinitely and puts the results in a Queue """
     print("worker start match_dir={}".format(match_dir))
     while True:
-        (game_num, seed, bots) = input_q.get()        
+        (game_num, seed, mapsize, bots) = input_q.get()        
         game_dir = os.path.join(match_dir, str(game_num))
         os.mkdir(game_dir)
         os.chdir(game_dir)  # so bot logs go in the game dir
         print("running game {} in {}".format(game_num, game_dir))
-        result = run_game(game_dir, seed, bots)
+        result = run_game(game_dir, seed, mapsize, bots)
         output_q.put(result)
 
 
@@ -98,6 +103,7 @@ def get_num_players(force_player_count):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--players", type=int, help="force a given number of players")
+    parser.add_argument("--mapsize", type=int, help="force a given map size")
     args = parser.parse_args()
 
     challenger_bots = ["Rho"]
@@ -158,7 +164,7 @@ def main():
                 for challenger_bot in challenger_bots:
                     game_bots = list(game_bots_template)
                     game_bots[challenger_pid] = challenger_bot
-                    game_spec = (game_num, seed, game_bots)
+                    game_spec = (game_num, seed, args.mapsize, game_bots)
                     input_q.put(game_spec)
                     game_num += 1
 

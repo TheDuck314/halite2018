@@ -73,6 +73,7 @@ Test results against Xi with cautiousness-exploitation turned off in both:
     Omicron    2p:  67-17    4p:  77-38-39-21
 
 v26 15_pi
+final rank=1 μ=93.74 σ=about 0.6 at 20181108 12:15am
 - crude combat late in 4p. With <= 100 turns left, consider enemies passable under some strict conditions. consider_ramming() is still not used in 4p.
   This gave 62-32-21-14 against Omicron.
 - make more ships in 4p. requirement is ships * 2000 < halite left, down from 3500. Seems logical, looking at games. I was making many fewer ships in games I lost,
@@ -81,7 +82,6 @@ v26 15_pi
 
 
 v27 16_rho
-REMEMBER TO TURN ON CAUTIOUSNESS EXPLOITATION BEFORE UPLOADING
 - hopefully fixed a silly bug where we could ram our own ship that was waiting to build a dropoff
 - resolve_plans_into_commands() lets Purpose::Flee plans move onto "impassable" squares. This was 149-75 against Pi in 2p.
 - slightly more 4p aggression, again via impassable and we_win_fight_4p().  41-35-29-23 against Pi in 4p
