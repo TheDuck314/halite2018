@@ -9,6 +9,21 @@ I think I really could benefit from
 
 tony maybe builds for longer? to 1000 halite/ship maybe?
 
+tune the 0.5 bonus on enemy halite
+
+THIS IS ON 32 X 32:
+             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1000    2p:   0- 0    4p:  38-56-56-101
+             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1500    2p:   0- 0    4p:  69-66-58-57
+             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=2000    2p:   0- 0    4p:  394-379-387-343
+also
+             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1750    2p:   0- 0    4p:  122-93-108-121
+             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=2000    2p:   0- 0    4p:  322-351-336-323
+
+
+
+consider picking up halite on the way back
+
+
 optimal ship stopping probably depends on map size? on small maps, everyone's probably inspired all the time and you can build later
 
 figure out why so many ships got stuck in https://halite.io/play/?game_id=1529637&replay_class=1&replay_name=replay-20181107-071034%2B0000-1541574463-56-56-1529637
@@ -152,6 +167,18 @@ Results of letting us consider squares passable in the last 100 turns of 4p usin
                                                 Omicron    2p:   0- 0    4p:  67-97-108-115
 
 
+
+
+
+
+
+tuning
+        if (halite_from_staying >= K * max(10, est_halite_rate)) {
+1.5
+                                                  Sigma    2p:  28-15    4p:  20-31-25-19
+                                                    Rho    2p:  15-28    4p:  75-64-70-76
+2.0
+                                                  Sigma    2p:  52-50    4p:  57-58-47-52
 
 
 

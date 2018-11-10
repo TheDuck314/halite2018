@@ -108,18 +108,12 @@ def show_stats(stats, title):
 
 show_stats(my_stats, "overall")
 
-for opp in ["TheDuck314", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "teccles", "ArtemisFowl17"]:
+for opp in ["TheDuck314", "TonyK", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "teccles", "ArtemisFowl17"]:
     if opp == my_username:
         continue
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))
 
-header("2p losses against rachol")
-tmp = with_player(my_stats, "Rachol")
-print(tmp[(tmp.NumPlayers == 2) & (tmp.MyRank == 2)].to_string())
-print()
-print()
-
-header("2p losses in general")
+header("2p losses")
 tmp = my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()
 tmp["HaliteRatio"] = tmp["WinnerHalite"] / tmp["MyHalite"].astype(float)
 print(tmp.sort_values(by="HaliteRatio", ascending=False).to_string())
