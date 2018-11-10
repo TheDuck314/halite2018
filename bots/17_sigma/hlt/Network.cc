@@ -7,7 +7,7 @@
 #include "Log.h"
 #include "Grid.h"
 
-static const char* NAME = "Rho";
+static const char* NAME = "Sigma";
 
 static string read_line()
 {

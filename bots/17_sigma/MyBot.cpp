@@ -23,6 +23,7 @@ set<int> busy_ship_ids;   // ships that shouldn't be assigned new plans. cleared
 unordered_set<int> returning_ship_ids; // maintained across turned
 bool want_dropoff = false;  // recomputed by consider_making_dropoff() each turn
 PosSet impassable(false);  // recomputed by set_impassable each turn
+//map<int, int> sid_to_last_structure_turn;
 
 // GLOBAL CONSTANTS
 const int TURNS_LEFT_TO_RETURN = 15;  // TUNE
@@ -32,7 +33,10 @@ Parameter<double> MINE_RATE_MULT("MINE_RATE_MULT");
 Parameter<double> LOW_HALITE_EFFICIENCY_PENALTY("LOW_HALITE_EFFICIENCY_PENALTY");
 Parameter<double> MINING_DIST_FROM_ME_MULT("MINING_DIST_FROM_ME_MULT");
 Parameter<double> MIN_HALITE_PER_SHIP_TO_SPAWN_4P("MIN_HALITE_PER_SHIP_TO_SPAWN_4P");
+Parameter<double> DROPOFF_MIN_NEW_HALITE_IN_RADIUS("DROPOFF_MIN_NEW_HALITE_IN_RADIUS");
 Parameter<int> MIN_DROPOFF_SEPARATION("MIN_DROPOFF_SEPARATION");
+Parameter<int> MAX_TURNS_LEFT_TO_RAM_4P("MAX_TURNS_LEFT_TO_RAM_4P");
+Parameter<bool> CONSIDER_RAMMING_IN_4P("CONSIDER_RAMMING_IN_4P");
 
 void plan(const Ship &ship, Vec tgt, Purpose purpose)
 {
@@ -43,6 +47,13 @@ void plan(const Ship &ship, Vec tgt, Purpose purpose)
 bool can_move(Ship ship)
 {
     return grid(ship.pos).halite <= Constants::MOVE_COST_RATIO * ship.halite;
+}
+
+// how much halite a ship will mine from a square with the given amount of
+// halite, assuming the ship has room and is not inspired
+int mined_halite(int square_halite)
+{
+    return (square_halite + Constants::EXTRACT_RATIO - 1) / Constants::EXTRACT_RATIO;  // divide and round up
 }
 
 bool should_spawn()
@@ -86,7 +97,7 @@ bool we_win_fight(Vec pos)
 
 bool we_win_fight_4p(Vec pos)
 {
-    if (Game::turns_left() > 100) return false;
+    if (Game::turns_left() > MAX_TURNS_LEFT_TO_RAM_4P.get(200)) return false;
 
     const int R = 4;  // TUNE
     const int num_enemies = grid.num_within_dist(pos, Game::enemy_ships, R);
@@ -101,7 +112,7 @@ bool we_win_fight_4p(Vec pos)
         num_allies += 1;
     }
 
-    //return num_enemies <= 1 && num_allies >= 2;  // TUNE
+    // TUNE
     return  (num_enemies <= 1 && num_allies >= 2) ||
             (num_enemies == 2 && num_allies >= 4) ||
             (num_enemies == 3 && num_allies >= 6);
@@ -122,8 +133,8 @@ void set_impassable()
             // or they'll block us from delivering. it's fine to ram them.
             if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//            if (enemy_is_cautious) {  // currently only ever true in 4p
-            if (false) {  // can be useful to turn this off for testing
+            if (enemy_is_cautious) {  // currently only ever true in 4p
+//            if (false) {  // can be useful to turn this off for testing
                 // This player generally doesn't move adjacent to opponents' ships.
                 // Let's only rely on this if they are currently not adjacent to one
                 // of their structures and also not adjacent to any of our ships (because
@@ -392,17 +403,33 @@ void plan_returning(const vector<Ship> &returners)
             }
         }
         Log::flog(ship, "best return dest is %s", +tgt.toString());
+
+        /*const int est_trip_len = Game::turn - sid_to_last_structure_turn.at(ship.id) + grid.dist(ship.pos, tgt);
+        const int est_halite_rate = Constants::MAX_HALITE / est_trip_len;
+        Log::flog(ship.pos, "est_trip_len: %d", est_trip_len);
+        Log::flog(ship.pos, "est_halite_rate: %d", est_halite_rate);
+        const int halite_room = Constants::MAX_HALITE - ship.halite;
+        const int halite_here = grid(ship.pos).halite;
+        const int halite_from_staying = min(halite_room, mined_halite(halite_here));        
+        Log::flog(ship.pos, "halite from staying: %d", halite_from_staying);
+        if (halite_from_staying >= 2.0 * max(10, est_halite_rate)) {
+            Log::flog_color(ship.pos, 255, 0, 255, "staying during return!");
+            plan(ship, ship.pos, Purpose::Return);
+            continue;
+        }*/
+
+
+
         plan(ship, tgt, Purpose::Return);
     }
 }
-
 
 int compute_turns_to_fill_up(int ship_halite, int square_halite)
 {
     if (ship_halite + square_halite < Constants::MAX_HALITE) Log::die("%d %d will never fill up", ship_halite, square_halite);
     int turns = 0;
     while (ship_halite < Constants::MAX_HALITE) {
-        int amt_mined = (square_halite + Constants::EXTRACT_RATIO - 1) / Constants::EXTRACT_RATIO;  // divide and roun dup
+        const int amt_mined = mined_halite(square_halite);
         ship_halite += amt_mined;
         square_halite -= amt_mined;
         turns += 1;
@@ -616,7 +643,7 @@ void consider_making_dropoff(vector<Command> &commands)
         }
         //Log::flog(pos, "new_halite_in_radius = %d", new_halite_in_radius);
         //Log::flog(pos, "old_halite_in_radius = %d", old_halite_in_radius);
-        if (new_halite_in_radius < 25000) {  // TUNE
+        if (new_halite_in_radius < DROPOFF_MIN_NEW_HALITE_IN_RADIUS.get(25000)) {  // TUNE
             continue;
         }
 
@@ -667,7 +694,7 @@ void consider_making_dropoff(vector<Command> &commands)
 
 void consider_ramming(vector<Command> &commands)
 {
-    if (Game::num_players != 2) return;
+    if (Game::num_players != 2 && !CONSIDER_RAMMING_IN_4P.get(false)) return;
 
     for (Ship enemy_ship : Game::enemy_ships) {
         if (contains(Game::enemy_structures, enemy_ship.pos)) continue;  // don't ram on top of enemy structures
@@ -760,6 +787,12 @@ vector<Command> turn()
     plans.clear();
     busy_ship_ids.clear();
 
+    /*for (Ship s : Game::me->ships) {
+        if (Game::me->has_structure_at(s.pos)) {
+            sid_to_last_structure_turn[s.id] = Game::turn;
+        }
+    }*/
+
     PlayerAnalyzer::analyze();
 
     set_impassable();
@@ -843,7 +876,10 @@ int main(int argc, char **argv)
     LOW_HALITE_EFFICIENCY_PENALTY.parse(argc, argv);
     MINING_DIST_FROM_ME_MULT.parse(argc, argv);
     MIN_HALITE_PER_SHIP_TO_SPAWN_4P.parse(argc, argv);
+    DROPOFF_MIN_NEW_HALITE_IN_RADIUS.parse(argc, argv);
     MIN_DROPOFF_SEPARATION.parse(argc, argv);
+    MAX_TURNS_LEFT_TO_RAM_4P.parse(argc, argv);
+    CONSIDER_RAMMING_IN_4P.parse(argc, argv);
 
     // start the main game loop
     while (true) {

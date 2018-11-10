@@ -20,6 +20,7 @@ class Parameter final
             if (arg.find(prefix) == 0) {
                 stringstream ss(arg.substr(prefix.length()));
                 ss >> override_value;
+                if (ss.fail()) Log::die("Failed to parse parameter argument %s", +arg);
                 overridden = true;
                 Log::log("Parameter %s override = %f", +name, (double)override_value);
             }
