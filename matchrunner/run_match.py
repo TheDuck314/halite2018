@@ -25,6 +25,7 @@ BOT_COMMANDS = {
     "Rho":     "/home/greg/coding/halite/2018/repo/bots/16_rho/build/MyBot",
     "Sigma":   "/home/greg/coding/halite/2018/repo/bots/17_sigma/build/MyBot",
     "Tau":     "/home/greg/coding/halite/2018/repo/bots/18_tau/build/MyBot",
+    "Upsilon": "/home/greg/coding/halite/2018/repo/bots/19_upsilon/build/MyBot",
 }
 
 def run_game(game_dir, seed, mapsize, bots):
@@ -108,12 +109,12 @@ def main():
     parser.add_argument("--mapsize", type=int, help="force a given map size")
     args = parser.parse_args()
 
-    challenger_bots = ["Tau"]
-    ref_bot = "Sigma"
+    challenger_bots = ["Upsilon"]
+    ref_bot = "Tau"
     """
-    challenger_base = "Tau"
-    param = "DONT_BUILD_NEAR_ENEMY_STRUCTURES"
-    values = [0, 1]
+    challenger_base = "Upsilon"
+    param = "MAX_HALITE_TO_HELP_IN_FIGHT_4P"
+    values = [300, 800, 1000, 600]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)

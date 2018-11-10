@@ -7,24 +7,11 @@ I think I really could benefit from
  - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
  - prefer to make dropoffs near miners
 
-tony maybe builds for longer? to 1000 halite/ship maybe?
-
-tune the 0.5 bonus on enemy halite
-
-THIS IS ON 32 X 32:
-             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1000    2p:   0- 0    4p:  38-56-56-101
-             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1500    2p:   0- 0    4p:  69-66-58-57
-             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=2000    2p:   0- 0    4p:  394-379-387-343
-also
-             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1750    2p:   0- 0    4p:  122-93-108-121
-             Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=2000    2p:   0- 0    4p:  322-351-336-323
-
+tony maybe builds for longer in 4p? to 1000 halite/ship maybe?
 
 in 4p, whether you should ram a ship depends heavily on a combination of its halite and time left. try this!
 
-
 consider picking up halite on the way back
-
 
 optimal ship stopping probably depends on map size? on small maps, everyone's probably inspired all the time and you can build later
 
@@ -35,9 +22,6 @@ consider decreasing min-dist-to-enemy-dropff!
 recent reasons for losing:
 someone made a dropoff too near where I wanted one, so I built a really crappy dropoff instead
 subpar fleeing?
-
-this dropoff looks awful
-https://halite.io/play/?game_id=1533690&replay_class=1&replay_name=replay-20181107-091956%2B0000-1541581559-48-48-1533690
 
 THIS SHOULD BE HIGH PRIORITY:
 I really need to able to flee onto allies' squares by pushing them off
@@ -51,24 +35,16 @@ Or, maybe resolve_plans_into_commands is the right place
 
 Every collision probably represents a mistake
 
-late game 4p aggression can be turned way up!
-
 can we be more assertive in 4p? change the "safety" threshold? fit a model offline or online to predict whether they'll move onto a given square?
 
 my returners are ramming people on the way home at the end in 4p, which is idiotic
-
-could have a whole queue-based flee planning system analogous to plan_mining, which could help
-if flee-ers are infering with each other.
+in general my returners gonna casually ram enemies I designate as "passable"?? that seems pretty wrong
 
 Consider evasion in 4p. Might want to first write something to check whether a player has rammed in this game (not trivial)
 
 in 4p, avoid collisions in the last few rounds before we'll need to collapse
 
 probably something to be gotten by not ramming with high-halite ships
-
-do I need more ships in 4p? the justification for my current heuristic neglects the
-fact that you're going to get a lot of free halite from inspiration that's not actually on the map
-
 
 maybe need some repulsion in mining targets
 
@@ -78,13 +54,11 @@ tune the bonus for returning to a richer dropoff
 
 need some hysteresis in dropoff location choice
 
-in addition to not building so far away, we also need to not be so scared of recent enemy dropoffs
+we need to not be so scared of recent enemy dropoffs
 https://halite.io/play/?game_id=1166131&replay_class=1&replay_name=replay-20181030-074422%2B0000-1540884547-64-64-1166131
 
 in 2p there's probably a lot of value in grouping -- at least, our low-halite ships
 should be attracted to wherever the action is
-
-WAIT-- are my returners gonna casually ram enemies I designate as "passable"?? that seems pretty wrong
 
 consider tuning the parameter of when to stop making ships
 
@@ -92,8 +66,6 @@ consider tuning the min nearby halite to make a dropoff / min dist between dropo
 
 min dist between dropoffs should logically be a function of halite density at the new dropoff
 higher halite density justifes closer-spaced dropoffs (especially on smaller maps?)
-
-lategame 4p ramming could be op, if you only do it when you're the only one nearby
 
 in 4p, at the end, we can ram empty ships into whichever player is closest ahead of us (or closest behind us if we're winning)
 
@@ -103,25 +75,14 @@ flee toward base, not allies?
 
 don't ram when you don't have enough spare capacity nearby to pick up the halite?
 
-we still don't actually flee onto impasable squares
-
-try making the planning priority queue just a regular queue.
-
-I think I might be building too many ships on 2p maps, specifically when there's not much halite left
-
 maybe the advance dropoffs are bad because they're very far from the turtles and they have to 
 spend tons of time getting there. that suggests there should be benefits from:
  - anticipating the dropoff location and preferring to mine near there
  - preferring to build the dropoffs closer to base, and closer to our ships
 
-some logical checks we can do in mining:
- - is staying here to fill up guaranteed to be strictly faster than going wherever we're going?
-
-vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 - when choosing mining target ships should take into account expected mining rate of *next* trip.
   that is, consider returning to all possible dropoffs, and consider the return time & expected next-trip mining rate,
   calculate an overall mining rate for each possible return, and max over them.
-^^^^^^^^^^^^^ DO THIS ONE ^^^^^^^^^^^^^^^^^^
 
 - think about whether our "halite rate" mining target selection is quite correct.
   it's neglecting the benefit of getting our already-held halite back to base earlier
@@ -138,8 +99,6 @@ vvvvvvvvvvvvv DO THIS ONE vvvvvvvvvvvvvvvvvv
 Rachol pre-sends his miners to where he knows he is going to build his dropoff.
 I can do this too but I'd need to make sure I don't decide to place the dropoff somewhere else.
 Also he doesn't just send his returning miners.
-
-EASY THING TO TRY: ramming in 4p under strict conditions (late game, no one will steal the loot)
 
 
 try the thing where we do a few iterations of mining target replanning with some repulsion
