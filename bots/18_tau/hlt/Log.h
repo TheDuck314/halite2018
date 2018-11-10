@@ -22,15 +22,15 @@ class Log
 
     static void die(const string& msg)
     {
-        log(msg);
+        fprintf(stderr, "%s", +msg);
         exit(-1);
     }
 
     template<typename Arg1, typename... argv>
     static void die(const char* format, Arg1 arg1, argv... args)
     {
-        log(format, arg1, args...);
-        exit(-1);
+        const string msg = stringf(format, arg1, args...);
+        die(msg);
     }
 
     static void flog(Vec pos, const string& msg);

@@ -14,6 +14,8 @@ class Grid final
   public:
     void resize(int _width, int _height);
 
+    bool inited = false;
+
     int width;
     int height;
     vector<Vec> positions;

@@ -90,6 +90,7 @@ void Network::init()
             //Log::log("grid(%d, %d).halite = %d", x, y, grid(x, y).halite);
         }
     }
+    grid.inited = true;
     
     // That's all the initial info we get. Once we're done initializing the game expects us to respond with our name
     // TODO: could call a function to do some initial computation here.
