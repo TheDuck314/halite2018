@@ -20,6 +20,8 @@ also
              Sigma.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=2000    2p:   0- 0    4p:  322-351-336-323
 
 
+in 4p, whether you should ram a ship depends heavily on a combination of its halite and time left. try this!
+
 
 consider picking up halite on the way back
 
@@ -181,4 +183,10 @@ tuning
                                                   Sigma    2p:  52-50    4p:  57-58-47-52
 
 
+
+
+                           Tau.FIGHT_COUNT_RADIUS_2P=10    2p:  56-25    4p:   0- 0- 0- 0
+                            Tau.FIGHT_COUNT_RADIUS_2P=8    2p:  59-22    4p:   0- 0- 0- 0
+                            Tau.FIGHT_COUNT_RADIUS_2P=6    2p:  58-22    4p:   0- 0- 0- 0
+                            Tau.FIGHT_COUNT_RADIUS_2P=4    2p:  69-173    4p:   0- 0- 0- 0
 

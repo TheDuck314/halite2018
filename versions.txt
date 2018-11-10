@@ -82,10 +82,16 @@ final rank=1 μ=93.74 σ=about 0.6 at 20181108 12:15am
 
 
 v27 16_rho
+final rank=1 μ=93.29 σ=0.52 at 20181109 10:30pm
 - hopefully fixed a silly bug where we could ram our own ship that was waiting to build a dropoff
 - resolve_plans_into_commands() lets Purpose::Flee plans move onto "impassable" squares. This was 149-75 against Pi in 2p.
 - slightly more 4p aggression, again via impassable and we_win_fight_4p().  41-35-29-23 against Pi in 4p
 
 v28 17_sigma
+final rank=1, μ=94.35 σ=0.83 at 20181110 1:43am 
 - 4p aggression starts at 200 turns left instead of 100. Gives 30-15-8-3 against 100.
+
+v29 18_tau
+- in 2p, we_win_fight() checks that we have a majority of ships within radius 8, up from 4. This gave 112-38 against Sigma.
+
 

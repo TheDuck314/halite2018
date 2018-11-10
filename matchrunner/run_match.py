@@ -23,7 +23,8 @@ BOT_COMMANDS = {
     "Omicron": "/home/greg/coding/halite/2018/repo/bots/14_omicron/build/MyBot",
     "Pi":      "/home/greg/coding/halite/2018/repo/bots/15_pi/build/MyBot",
     "Rho":     "/home/greg/coding/halite/2018/repo/bots/16_rho/build/MyBot",
-    "Sigma":     "/home/greg/coding/halite/2018/repo/bots/17_sigma/build/MyBot",
+    "Sigma":   "/home/greg/coding/halite/2018/repo/bots/17_sigma/build/MyBot",
+    "Tau":     "/home/greg/coding/halite/2018/repo/bots/18_tau/build/MyBot",
 }
 
 def run_game(game_dir, seed, mapsize, bots):
@@ -107,12 +108,12 @@ def main():
     parser.add_argument("--mapsize", type=int, help="force a given map size")
     args = parser.parse_args()
 
-    challenger_bots = ["Sigma"]
-    ref_bot = "Rho"
+    challenger_bots = ["Tau"]
+    ref_bot = "Sigma"
     """
-    challenger_base = "Sigma"
-    param = "CONSIDER_RAMMING_IN_4P"
-    values = [1, 0]
+    challenger_base = "Tau"
+    param = "DONT_BUILD_NEAR_ENEMY_STRUCTURES"
+    values = [0, 1]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
