@@ -2,6 +2,7 @@
 
 #include <deque>
 #include <queue>
+#include "Constants.h"
 #include "Log.h"
 #include "Grid.h"
 #include "Util.h"
@@ -167,52 +168,51 @@ Direction Path::find_low_halite(Vec src, Vec dest, const PosSet &blocked)
     return simple(src, dest, blocked);;
 }
 
-
-// TEST
-// never consider moving away from the target
-Direction Path::find_strict(Vec src, Vec dest, const PosSet &blocked)
+struct TravelCostQueueElem
 {
-    if (src == dest) {
-        return Direction::Still;
-    }
-    if (blocked(dest)) {
-        // do the best we can
-        return simple(src, dest, blocked);
-    }
-    PosSet finished(blocked);
+    Vec pos;
+    int dist_so_far;
+    int halite_so_far;
+};
+
+PosMap<int> Path::build_halite_travel_cost_map(Vec src)
+{
+    PosMap<int> travel_cost(0);
+
+    auto elem_cmp = [](TravelCostQueueElem a, TravelCostQueueElem b) {
+        if (a.dist_so_far != b.dist_so_far) return a.dist_so_far > b.dist_so_far;
+        return a.halite_so_far > b.halite_so_far;
+    };
+    priority_queue<TravelCostQueueElem, vector<TravelCostQueueElem>, decltype(elem_cmp)> q(elem_cmp);
+
+    PosSet finished(false);
     finished(src) = true;
-    deque<PathQueueElem> q;
 
-    // It helps to pick the initial directions in the order of which
-    // ones naively bring us toward the target.
-    vector<Direction> initial_dirs = grid.strict_approach_dirs(src, dest);
-    for (Direction d : initial_dirs) {
-        Vec adj = grid.add(src, d);
-        if (adj == dest) {
-            return d;
-        }
-        if (finished(adj)) {
-            continue;
-        }
-        q.push_back({adj, d});
-        finished(adj) = true;
+    const int src_halite = grid(src).halite;
+    for (int d = 0; d < 4; ++d) {
+        Vec adj = grid.add(src, (Direction)d);
+        if (finished(adj)) continue;
+        q.push({adj, 2, src_halite});
     }
-    while (!q.empty()) {
-        PathQueueElem e = q.front();
-        q.pop_front();
-        for (Direction d : grid.strict_approach_dirs(e.pos, dest)) {
-            Vec adj = grid.add(e.pos, d);
-            if (finished(adj)) {
-                continue;
-            }
-            if (adj == dest) {
-                return e.initial_dir;
-            }
-            q.push_back({adj, e.initial_dir});
-            finished(adj) = true;
-        }
-    }    
 
-    // fancy search failed. Do a simple fallback thing.
-    return simple(src, dest, blocked);
+    while (!q.empty()) {
+        TravelCostQueueElem e = q.top();
+        q.pop();
+
+        if (finished(e.pos)) continue;
+        finished(e.pos) = true;
+
+        travel_cost(e.pos) = e.halite_so_far / Constants::MOVE_COST_RATIO;
+
+        const int dist_so_far = e.dist_so_far + 1;
+        const int halite_so_far = e.halite_so_far + grid(e.pos).halite;
+        for (int d = 0; d < 4; ++d) {
+            Vec adj = grid.add(e.pos, (Direction)d);
+            if (finished(adj)) continue;
+            TravelCostQueueElem to_push{adj, dist_so_far, halite_so_far};
+            q.push(to_push);
+        }
+    }
+
+    return travel_cost;
 }

@@ -10,8 +10,8 @@ enum class Purpose
     Stuck = 0,          // must stay put b/c too little halite
     Ram = 1,            // trying to hit an adjacent enemy
     EvadeReturner = 2,  // getting out of the way of someone with the Return purpose
-    Return = 3,         // bringing halite back to base
-    Flee = 4,           // moving away from an adjacent enemy
+    Flee = 3,           // moving away from an adjacent enemy
+    Return = 4,         // bringing halite back to base
     Mine = 5,           // getting halite
 };
 
