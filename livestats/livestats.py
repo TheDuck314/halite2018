@@ -5,6 +5,8 @@ import pandas as pd
 from collections import defaultdict
 
 my_userid = 3191; my_username = "TheDuck314"; only_version = -1
+#my_userid = 1023; my_username = "TonyK"; only_version = -1
+#my_userid = 2807; my_username = "teccles"; only_version = -1
 #my_userid = 134; my_username = "Rachol"; only_version = -1
 
 games_per_request = 250  # 250 is api max I think

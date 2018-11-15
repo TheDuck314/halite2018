@@ -92,6 +92,15 @@ final rank=1, μ=94.35 σ=0.83 at 20181110 1:43am
 - 4p aggression starts at 200 turns left instead of 100. Gives 30-15-8-3 against 100.
 
 v29 18_tau
+final rank=1 μ=95.16 σ=0.33 at 20181115 12:08am
 - in 2p, we_win_fight() checks that we have a majority of ships within radius 8, up from 4. This gave 112-38 against Sigma.
+
+v30 19_upsilon
+- returners alway consider enemy ship locations blocked for pathing. Didn't test this carefully but it has to be good based on what I seen in live.
+- when looking at a potential mining square's distance from base, we consider the planned dropoff point, if any, as a structure on par with the real ones
+- we allow returners to return to the planned dropoff point, as long as there are enough returners already going back to get to 4000 halite
+- returners pause on a square if doing so will net them at least 50 halite for the turn. didn't test this but something like this has to be good.
+Overall 2p 50-26 against Tau, didn't test 4p, should do that.
+
 
 

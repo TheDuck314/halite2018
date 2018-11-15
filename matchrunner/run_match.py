@@ -113,8 +113,8 @@ def main():
     ref_bot = "Tau"
     """
     challenger_base = "Upsilon"
-    param = "MAX_HALITE_TO_HELP_IN_FIGHT_4P"
-    values = [300, 800, 1000, 600]
+    param = "DROPOFF_PENALTY_FRAC_PER_DIST"
+    values = [0.1, 0.03, 0.0, 0.01]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -124,6 +124,7 @@ def main():
 
     ref_bot = challenger_bots.pop()
     """
+    #ref_bot = "Tau"
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots

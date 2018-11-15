@@ -7,6 +7,44 @@ I think I really could benefit from
  - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
  - prefer to make dropoffs near miners
 
+need to speed things up
+
+when we get near to wanting to build a dropoff, bias our miners toward where it's gonna be chosen to go!
+
+NOTES ON MINING
+- The 2*dist_from_here part of the mining planning seems wrong. Why do we do worse when we make it 1*?
+  Maybe it's because we neglect the halite cost of moving. We could model that explicitly!
+- Similarly, the "tgt must have 3x halite to move there" logic seems wrong. Is it covering for the same issue?
+- I'm pretty into the idea of computing halite cost to get to each square, and then adding that into the halite_needed for that square
+- The factor of 0.7 in the naive_mine_rate is wrong if we'll actually fill up in 1 or 2 turns.
+- Similarly, should the 3*here_halite thing depend on how close we are to filling up? maybe, if we're really close to full, we should relax it?
+
+- the whole turns to fill up calculation assumes that the single square we are considering is representative of a whole region. but
+  that's obviously false. we'll be overoptimistic about the total time if we're considering a square that has higher halite than its
+  neighbors, and if we'll need to visit those neighbors to fill up.
+
+- Idea: if a ship knows it's not going to fill up from its mining target, it should be able to reserve the best adjacent square,
+  assuming no closer ship wants that square. Or, instead of the best adjacent square, what it thinks its mining target will be
+  after it finishes its current square? can even do that with a sim.
+
+- We may over-value near-to-us or near-to-base squares because we'll assume there are infinite other squares with the same
+  dist_from_me and dist_from_base which may not be true (same as how we'll overvalue extra-high-halite squares b/c we'll
+  assume there are plenty more where that one came from).
+
+- A silly thing that can happen: a miner is staying still instead of moving to its tgt b/c of the here_halite vs tgt_halite logic,
+  but a Returner wants to move through the miner, so the miner gets swapped further away from its tgt. Instead the miner ideally should
+  just move toward its tgt, if possible. My original thinking here was that most likely the swap will bring you closer to your tgt
+  on average, but it's not going to always be true.
+
+I think consider_ramming (and maybe other stuff) overrides the final collapse, which is silly
+
+Miners heading out shouldn't dodge around returners coming in just b/c the returner is moving onto an adjacent
+square. Miner should just wait 1 turn and then probably swap places.
+
+try breaking ties in mining tgt conflicts between ships by ship halite, or base distance, or whatever?
+
+low-halite-pathfind to mining targets
+
 tony maybe builds for longer in 4p? to 1000 halite/ship maybe?
 
 in 4p, whether you should ram a ship depends heavily on a combination of its halite and time left. try this!
@@ -19,9 +57,12 @@ figure out why so many ships got stuck in https://halite.io/play/?game_id=152963
 
 consider decreasing min-dist-to-enemy-dropff!
 
+consider being more cautious about ramming near enemy structures
+
 recent reasons for losing:
 someone made a dropoff too near where I wanted one, so I built a really crappy dropoff instead
 subpar fleeing?
+getting deliberately rammed a lot in 4p late game
 
 THIS SHOULD BE HIGH PRIORITY:
 I really need to able to flee onto allies' squares by pushing them off
@@ -148,4 +189,18 @@ tuning
                             Tau.FIGHT_COUNT_RADIUS_2P=8    2p:  59-22    4p:   0- 0- 0- 0
                             Tau.FIGHT_COUNT_RADIUS_2P=6    2p:  58-22    4p:   0- 0- 0- 0
                             Tau.FIGHT_COUNT_RADIUS_2P=4    2p:  69-173    4p:   0- 0- 0- 0
+
+
+
+A result I'm not going to do anything about:
+                     Tau.MINING_DIST_FROM_BASE_MULT=1.5    2p:  315-235    4p:  260-273-262-241
+                     Tau.MINING_DIST_FROM_BASE_MULT=2.0    2p:  326-223    4p:  243-257-270-266
+                     Tau.MINING_DIST_FROM_BASE_MULT=2.5    2p:  311-238    4p:  204-236-278-318
+                     Tau.MINING_DIST_FROM_BASE_MULT=3.0    2p:  279-270    4p:  145-212-285-394
+                     Tau.MINING_DIST_FROM_BASE_MULT=3.5    2p:  243-306    4p:  79-193-254-510
+                     Tau.MINING_DIST_FROM_BASE_MULT=4.0    2p:  202-347    4p:  54-113-259-610
+                     Tau.MINING_DIST_FROM_BASE_MULT=1.0    2p:  1619-1676    4p:  5231-4932-4608-3877
+
+
+
 
