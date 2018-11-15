@@ -35,12 +35,14 @@ struct Bot {
     Parameter<double> MINE_RATE_MULT;
     Parameter<double> LOW_HALITE_EFFICIENCY_PENALTY;
     Parameter<double> MINING_DIST_FROM_ME_MULT;
+    Parameter<double> MINING_DIST_FROM_BASE_MULT;
     Parameter<double> MIN_HALITE_PER_SHIP_TO_SPAWN_4P;
     Parameter<double> DROPOFF_MIN_NEW_HALITE_IN_RADIUS;
     Parameter<double> ENEMY_SHIP_HALITE_FRAC;
     Parameter<int> MIN_DROPOFF_SEPARATION;
     Parameter<int> MAX_TURNS_LEFT_TO_RAM_4P;
     Parameter<int> FIGHT_COUNT_RADIUS_2P;
+    Parameter<int> DEBUG_MAX_SHIPS;
     Parameter<bool> CONSIDER_RAMMING_IN_4P;
     Parameter<bool> DONT_MINE_RAM_TARGETS;
     Parameter<bool> DONT_BUILD_NEAR_ENEMY_STRUCTURES;
@@ -52,12 +54,14 @@ struct Bot {
         MINE_RATE_MULT("MINE_RATE_MULT"),
         LOW_HALITE_EFFICIENCY_PENALTY("LOW_HALITE_EFFICIENCY_PENALTY"),
         MINING_DIST_FROM_ME_MULT("MINING_DIST_FROM_ME_MULT"),
+        MINING_DIST_FROM_BASE_MULT("MINING_DIST_FROM_BASE_MULT"),
         MIN_HALITE_PER_SHIP_TO_SPAWN_4P("MIN_HALITE_PER_SHIP_TO_SPAWN_4P"),
         DROPOFF_MIN_NEW_HALITE_IN_RADIUS("DROPOFF_MIN_NEW_HALITE_IN_RADIUS"),
         ENEMY_SHIP_HALITE_FRAC("ENEMY_SHIP_HALITE_FRAC"),
         MIN_DROPOFF_SEPARATION("MIN_DROPOFF_SEPARATION"),
         MAX_TURNS_LEFT_TO_RAM_4P("MAX_TURNS_LEFT_TO_RAM_4P"),
         FIGHT_COUNT_RADIUS_2P("FIGHT_COUNT_RADIUS_2P"),
+        DEBUG_MAX_SHIPS("DEBUG_MAX_SHIPS"),
         CONSIDER_RAMMING_IN_4P("CONSIDER_RAMMING_IN_4P"),
         DONT_MINE_RAM_TARGETS("DONT_MINE_RAM_TARGETS"),
         DONT_BUILD_NEAR_ENEMY_STRUCTURES("DONT_BUILD_NEAR_ENEMY_STRUCTURES")
@@ -66,12 +70,14 @@ struct Bot {
         MINE_RATE_MULT.parse(argc, argv);
         LOW_HALITE_EFFICIENCY_PENALTY.parse(argc, argv);
         MINING_DIST_FROM_ME_MULT.parse(argc, argv);
+        MINING_DIST_FROM_BASE_MULT.parse(argc, argv);
         MIN_HALITE_PER_SHIP_TO_SPAWN_4P.parse(argc, argv);
         DROPOFF_MIN_NEW_HALITE_IN_RADIUS.parse(argc, argv);
         ENEMY_SHIP_HALITE_FRAC.parse(argc, argv);
         MIN_DROPOFF_SEPARATION.parse(argc, argv);
         MAX_TURNS_LEFT_TO_RAM_4P.parse(argc, argv);
         FIGHT_COUNT_RADIUS_2P.parse(argc, argv);
+        DEBUG_MAX_SHIPS.parse(argc, argv);
         CONSIDER_RAMMING_IN_4P.parse(argc, argv);
         DONT_MINE_RAM_TARGETS.parse(argc, argv);
         DONT_BUILD_NEAR_ENEMY_STRUCTURES.parse(argc, argv);
@@ -97,6 +103,8 @@ struct Bot {
 
     bool should_spawn()
     {
+        if ((int)Game::me->ships.size() >= DEBUG_MAX_SHIPS.get(99999)) return false;
+
         int min_halite_to_spawn = Constants::SHIP_COST;
         if (want_dropoff) min_halite_to_spawn += Constants::DROPOFF_COST;
         if (Game::me->halite < min_halite_to_spawn) return false;  // can't spawn
@@ -581,7 +589,9 @@ struct Bot {
                 const double efficiency = (1.0 - low_halite_penalty) + low_halite_penalty * max(0.0, min((double)Constants::MAX_HALITE, halite)) / (double)Constants::MAX_HALITE;  // TUNE
                 const double mine_rate = efficiency * naive_mine_rate;
                 const double turns_to_fill_up = halite_needed / mine_rate;
-                const double total_time = turns_to_fill_up + dist_from_base + MINING_DIST_FROM_ME_MULT.get(2.0) * dist_from_me;  // TUNE. MINING_DIST_FROM_ME_MULT 1.0 is worse than 2.0, 3.0 about the same as 1.0
+                const double total_time = turns_to_fill_up 
+                                        + MINING_DIST_FROM_BASE_MULT.get(1.0) * dist_from_base
+                                        + MINING_DIST_FROM_ME_MULT.get(2.0) * dist_from_me;  // TUNE. MINING_DIST_FROM_ME_MULT 1.0 is worse than 2.0, 3.0 about the same as 1.0
                 const double overall_halite_rate = halite_needed / total_time;
 
                 if (overall_halite_rate > best_halite_rate) {
