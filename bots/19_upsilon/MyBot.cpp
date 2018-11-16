@@ -46,6 +46,7 @@ struct Bot {
     Parameter<int> MAX_HALITE_TO_HELP_IN_FIGHT_2P;
     Parameter<int> MAX_HALITE_TO_HELP_IN_FIGHT_4P;
     Parameter<int> DEBUG_MAX_SHIPS;
+    Parameter<int> RETURN_HALITE_THRESH;
     Parameter<bool> CONSIDER_RAMMING_IN_4P;
     Parameter<bool> DONT_MINE_RAM_TARGETS;
     Parameter<bool> DONT_BUILD_NEAR_ENEMY_STRUCTURES;
@@ -68,6 +69,7 @@ struct Bot {
         MAX_HALITE_TO_HELP_IN_FIGHT_2P("MAX_HALITE_TO_HELP_IN_FIGHT_2P"),
         MAX_HALITE_TO_HELP_IN_FIGHT_4P("MAX_HALITE_TO_HELP_IN_FIGHT_4P"),
         DEBUG_MAX_SHIPS("DEBUG_MAX_SHIPS"),
+        RETURN_HALITE_THRESH("RETURN_HALITE_THRESH"),
         CONSIDER_RAMMING_IN_4P("CONSIDER_RAMMING_IN_4P"),
         DONT_MINE_RAM_TARGETS("DONT_MINE_RAM_TARGETS"),
         DONT_BUILD_NEAR_ENEMY_STRUCTURES("DONT_BUILD_NEAR_ENEMY_STRUCTURES"),
@@ -87,6 +89,7 @@ struct Bot {
         MAX_HALITE_TO_HELP_IN_FIGHT_2P.parse(argc, argv);
         MAX_HALITE_TO_HELP_IN_FIGHT_4P.parse(argc, argv);
         DEBUG_MAX_SHIPS.parse(argc, argv);
+        RETURN_HALITE_THRESH.parse(argc, argv);
         CONSIDER_RAMMING_IN_4P.parse(argc, argv);
         DONT_MINE_RAM_TARGETS.parse(argc, argv);
         DONT_BUILD_NEAR_ENEMY_STRUCTURES.parse(argc, argv);
@@ -191,8 +194,8 @@ struct Bot {
                 // or they'll block us from delivering. it's fine to ram them.
                 if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//                if (enemy_is_cautious) {  // currently only ever true in 4p
-                if (false) {  // can be useful to turn this off for testing
+                if (enemy_is_cautious) {  // currently only ever true in 4p
+//                if (false) {  // can be useful to turn this off for testing
                     // This player generally doesn't move adjacent to opponents' ships.
                     // Let's only rely on this if they are currently not adjacent to one
                     // of their structures and also not adjacent to any of our ships (because
@@ -956,7 +959,7 @@ struct Bot {
                     returning = true;
                 }
             } else {  // this ship has not been returning
-                if (ship.halite >= Constants::MAX_HALITE) {  // TUNE
+                if (ship.halite >= RETURN_HALITE_THRESH.get(950)) {  // TUNE
                     returning_ship_ids.insert(ship.id);
                     returning = true;
                 } else {
