@@ -110,7 +110,7 @@ def show_stats(stats, title):
 
 show_stats(my_stats, "overall")
 
-for opp in ["TheDuck314", "TonyK", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "teccles", "ArtemisFowl17"]:
+for opp in ["TheDuck314", "teccles", "TonyK", "reCurs3", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
     if opp == my_username:
         continue
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))

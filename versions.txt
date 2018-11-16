@@ -96,11 +96,21 @@ final rank=1 μ=95.16 σ=0.33 at 20181115 12:08am
 - in 2p, we_win_fight() checks that we have a majority of ships within radius 8, up from 4. This gave 112-38 against Sigma.
 
 v30 19_upsilon
+final rank=1 μ=96.03 σ=about 0.45 20181116 12:48am
 - returners alway consider enemy ship locations blocked for pathing. Didn't test this carefully but it has to be good based on what I seen in live.
+  A thought: in 2p, this will look worse locally than in live, because locally enemy bots will flee if my returner considers a square passable, so there's
+  little point in the returner avoiding enemies.
 - when looking at a potential mining square's distance from base, we consider the planned dropoff point, if any, as a structure on par with the real ones
 - we allow returners to return to the planned dropoff point, as long as there are enough returners already going back to get to 4000 halite
 - returners pause on a square if doing so will net them at least 50 halite for the turn. didn't test this but something like this has to be good.
-Overall 2p 50-26 against Tau, didn't test 4p, should do that.
+Against Tau: 2p:  254-140    4p:  277-191-148-137
+
+v31 19_upsilon
+- return thresh 1000 -> 950 
+                       Upsilon.RETURN_HALITE_THRESH=900    2p:  16- 6    4p:  17-15- 7- 6
+                       Upsilon.RETURN_HALITE_THRESH=950    2p:  13- 9    4p:  24- 7- 8- 4
+                       Upsilon.RETURN_HALITE_THRESH=975    2p:  12-10    4p:  13-16- 4-10
+                      Upsilon.RETURN_HALITE_THRESH=1000    2p:  25-41    4p:  77-93-112-111
 
 
 

@@ -109,12 +109,13 @@ def main():
     parser.add_argument("--mapsize", type=int, help="force a given map size")
     args = parser.parse_args()
 
+    """
     challenger_bots = ["Upsilon"]
     ref_bot = "Tau"
     """
     challenger_base = "Upsilon"
-    param = "DROPOFF_PENALTY_FRAC_PER_DIST"
-    values = [0.1, 0.03, 0.0, 0.01]
+    param = "RETURN_HALITE_THRESH"
+    values = [900, 950, 975, 1000]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -123,7 +124,6 @@ def main():
         BOT_COMMANDS[challenger_bot] = BOT_COMMANDS[challenger_base] + " " + override
 
     ref_bot = challenger_bots.pop()
-    """
     #ref_bot = "Tau"
 
     bots = challenger_bots + [ref_bot]

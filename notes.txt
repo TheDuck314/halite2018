@@ -7,7 +7,17 @@ I think I really could benefit from
  - anticipate dropoff construction and rally there even before it's built. need to be careful that the halite to construct it actually gets delivered to the shipyard though
  - prefer to make dropoffs near miners
 
+Think about things that will look worse locally than in live because of the fleeing behavior of enemies.
+
 need to speed things up
+
+ram less with high-halite ships
+
+should be cautious in 2p about moving high halite ships next to enemies
+
+should ram less near enemy dropoffs?
+
+consider trying to do minimum-time pathfinding to the mining tgt square?
 
 when we get near to wanting to build a dropoff, bias our miners toward where it's gonna be chosen to go!
 
