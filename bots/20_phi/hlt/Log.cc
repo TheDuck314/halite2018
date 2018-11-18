@@ -1,5 +1,8 @@
 #include "Log.h"
 
+#include <unistd.h>
+#include <cstring>
+
 #include "StringUtil.h"
 #include "Game.h"
 
@@ -12,6 +15,11 @@ static bool ENABLED = true;  // flip me to false to disable logging
 
 void Log::init(int player_id)
 {
+    // dumb thing: don't log on ec2 or we'll run out of disk:
+    char hostname[1024];
+    gethostname(hostname, 1024);
+    if (strcmp(hostname, "home") != 0) ENABLED = false;
+
     if (!ENABLED) return;
 
     string fn = stringf("log-%d.txt", player_id);

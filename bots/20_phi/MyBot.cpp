@@ -25,7 +25,7 @@ struct Bot {
     unordered_set<int> returning_ship_ids; // maintained across turned
     bool want_dropoff = false;  // recomputed by consider_making_dropoff() each turn
     Vec planned_dropoff_pos;
-    PosSet impassable;  // recomputed by set_impassable each turn
+    map<int, PosSet> sid_to_impassable;  // recomputed by set_impassable each turn
     PosSet ram_targets; // squares we are ramming this turn
     //map<int, int> sid_to_last_structure_turn;
 
@@ -40,11 +40,13 @@ struct Bot {
     Parameter<double> DROPOFF_MIN_NEW_HALITE_IN_RADIUS;
     Parameter<double> ENEMY_SHIP_HALITE_FRAC;
     Parameter<double> DROPOFF_PENALTY_FRAC_PER_DIST;
+    Parameter<double> MINING_INSPIRATION_MULT;
     Parameter<int> MIN_DROPOFF_SEPARATION;
     Parameter<int> MAX_TURNS_LEFT_TO_RAM_4P;
     Parameter<int> FIGHT_COUNT_RADIUS_2P;
     Parameter<int> MAX_HALITE_TO_HELP_IN_FIGHT_2P;
     Parameter<int> MAX_HALITE_TO_HELP_IN_FIGHT_4P;
+    Parameter<int> MAX_HALITE_TO_RAM_2P;
     Parameter<int> DEBUG_MAX_SHIPS;
     Parameter<int> RETURN_HALITE_THRESH;
     Parameter<bool> CONSIDER_RAMMING_IN_4P;
@@ -53,8 +55,7 @@ struct Bot {
     Parameter<bool> LOW_HALITE_PATHFINDING_FOR_NON_RETURNERS;
 
     Bot(int argc, char **argv)
-      : impassable(false),
-        ram_targets(false),
+      : ram_targets(false),
         MINE_MOVE_ON_MULT("MINE_MOVE_ON_MULT"),
         MINE_RATE_MULT("MINE_RATE_MULT"),
         LOW_HALITE_EFFICIENCY_PENALTY("LOW_HALITE_EFFICIENCY_PENALTY"),
@@ -63,11 +64,13 @@ struct Bot {
         DROPOFF_MIN_NEW_HALITE_IN_RADIUS("DROPOFF_MIN_NEW_HALITE_IN_RADIUS"),
         ENEMY_SHIP_HALITE_FRAC("ENEMY_SHIP_HALITE_FRAC"),
         DROPOFF_PENALTY_FRAC_PER_DIST("DROPOFF_PENALTY_FRAC_PER_DIST"),
+        MINING_INSPIRATION_MULT("MINING_INSPIRATION_MULT"),
         MIN_DROPOFF_SEPARATION("MIN_DROPOFF_SEPARATION"),
         MAX_TURNS_LEFT_TO_RAM_4P("MAX_TURNS_LEFT_TO_RAM_4P"),
         FIGHT_COUNT_RADIUS_2P("FIGHT_COUNT_RADIUS_2P"),
         MAX_HALITE_TO_HELP_IN_FIGHT_2P("MAX_HALITE_TO_HELP_IN_FIGHT_2P"),
         MAX_HALITE_TO_HELP_IN_FIGHT_4P("MAX_HALITE_TO_HELP_IN_FIGHT_4P"),
+        MAX_HALITE_TO_RAM_2P("MAX_HALITE_TO_RAM_2P"),
         DEBUG_MAX_SHIPS("DEBUG_MAX_SHIPS"),
         RETURN_HALITE_THRESH("RETURN_HALITE_THRESH"),
         CONSIDER_RAMMING_IN_4P("CONSIDER_RAMMING_IN_4P"),
@@ -83,11 +86,13 @@ struct Bot {
         DROPOFF_MIN_NEW_HALITE_IN_RADIUS.parse(argc, argv);
         ENEMY_SHIP_HALITE_FRAC.parse(argc, argv);
         DROPOFF_PENALTY_FRAC_PER_DIST.parse(argc, argv);
+        MINING_INSPIRATION_MULT.parse(argc, argv);
         MIN_DROPOFF_SEPARATION.parse(argc, argv);
         MAX_TURNS_LEFT_TO_RAM_4P.parse(argc, argv);
         FIGHT_COUNT_RADIUS_2P.parse(argc, argv);
         MAX_HALITE_TO_HELP_IN_FIGHT_2P.parse(argc, argv);
         MAX_HALITE_TO_HELP_IN_FIGHT_4P.parse(argc, argv);
+        MAX_HALITE_TO_RAM_2P.parse(argc, argv);
         DEBUG_MAX_SHIPS.parse(argc, argv);
         RETURN_HALITE_THRESH.parse(argc, argv);
         CONSIDER_RAMMING_IN_4P.parse(argc, argv);
@@ -139,7 +144,7 @@ struct Bot {
 
     bool we_win_fight_2p(Vec pos)
     {
-        const int R = FIGHT_COUNT_RADIUS_2P.get(8);  // TUNE
+        /*const int R = FIGHT_COUNT_RADIUS_2P.get(8);  // TUNE
         const int num_enemies = grid.num_within_dist(pos, Game::enemy_ships, R);
 
         bool exclude_returners = grid.smallest_dist(pos, Game::me->structures) > R;
@@ -152,7 +157,34 @@ struct Bot {
             num_allies += 1;
         }
 
-        return num_allies > num_enemies;  // TUNE
+        return num_allies > num_enemies;  // TUNE*/
+
+        constexpr int max_R = 8;  // FIXME
+        vector<int> num_enemies_within(max_R+1, 0);
+        for (Ship e : Game::enemy_ships) {
+            int dist = grid.dist(e.pos, pos);
+            while (dist <= max_R) num_enemies_within[dist++] += 1;
+        }
+
+        bool exclude_returners = grid.smallest_dist(pos, Game::me->structures) > 8;  // TUNE
+        vector<int> num_allies_within(max_R+1, 0);
+        for (Ship ally : Game::me->ships) {
+            if (exclude_returners && returning_ship_ids.count(ally.id)) continue;
+            if (ally.halite > MAX_HALITE_TO_HELP_IN_FIGHT_2P.get(1000)) continue;
+
+            int dist = grid.dist(ally.pos, pos);
+            while (dist <= max_R) num_allies_within[dist++] += 1;
+        }
+
+        return num_allies_within[8] >= num_enemies_within[8];
+
+        /*
+        for (int d : {8, 10, 12}) {
+            const int diff_d = num_allies_within[d] - num_enemies_within[d];
+            if (diff_d != 0) return diff_d > 0;
+        }
+        return true;
+        */
     }
 
 
@@ -183,63 +215,71 @@ struct Bot {
 
     void set_impassable()
     {
-        impassable.fill(false);
+        sid_to_impassable.clear();
+        for (Ship my_ship : Game::me->ships) {
+            PosSet &impassable = sid_to_impassable.emplace(my_ship.id, PosSet(false)).first->second;
 
-        for (const Player &enemy : Game::players) {
-            if (enemy.id == Game::my_player_id) continue;
-            const bool enemy_is_cautious = PlayerAnalyzer::player_is_cautious(enemy.id);
-            Log::flog(Game::me->shipyard, "Player %d enemy_is_cautious: %d", enemy.id, enemy_is_cautious);
-            for (Ship enemy_ship : enemy.ships) {
-                // we need to ignore enemy ships that are on top of our structures
-                // or they'll block us from delivering. it's fine to ram them.
-                if (Game::me->has_structure_at(enemy_ship.pos)) continue;
+            for (const Player &enemy : Game::players) {
+                if (enemy.id == Game::my_player_id) continue;
+                const bool enemy_is_cautious = PlayerAnalyzer::player_is_cautious(enemy.id);
+                Log::flog(Game::me->shipyard, "Player %d enemy_is_cautious: %d", enemy.id, enemy_is_cautious);
+                for (Ship enemy_ship : enemy.ships) {
+                    // we need to ignore enemy ships that are on top of our structures
+                    // or they'll block us from delivering. it's fine to ram them.
+                    if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//                if (enemy_is_cautious) {  // currently only ever true in 4p
-                if (false) {  // can be useful to turn this off for testing
-                    // This player generally doesn't move adjacent to opponents' ships.
-                    // Let's only rely on this if they are currently not adjacent to one
-                    // of their structures and also not adjacent to any of our ships (because
-                    // in those special situations who knows what crazy stuff they might do).
-                    const int dist_from_enemy_base = grid.smallest_dist(enemy_ship.pos, enemy.structures);
-                    const int dist_from_me = grid.smallest_dist(enemy_ship.pos, Game::me->ships);
-                    if (dist_from_enemy_base > 2 && dist_from_me > 1) {
-                        // set the enemy ship itself as impassable, but not the adjacent squares
-                        impassable(enemy_ship.pos) = true;
-                        continue;
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
+//                    if (false) {  // can be useful to turn this off for testing
+                        // This player generally doesn't move adjacent to opponents' ships.
+                        // Let's only rely on this if they are currently not adjacent to one
+                        // of their structures and also not adjacent to any of our ships (because
+                        // in those special situations who knows what crazy stuff they might do).
+                        const int dist_from_enemy_base = grid.smallest_dist(enemy_ship.pos, enemy.structures);
+                        const int dist_from_me = grid.smallest_dist(enemy_ship.pos, Game::me->ships);
+                        if (dist_from_enemy_base > 2 && dist_from_me > 1) {
+                            // set the enemy ship itself as impassable, but not the adjacent squares
+                            impassable(enemy_ship.pos) = true;
+                            continue;
+                        }
                     }
-                }
-                // if we get here that enemy_is_cautious stuff didn't apply.
+                    // if we get here that enemy_is_cautious stuff didn't apply.
 
-                for (int d = 0; d < 5; ++d) {
-                    const Vec pos = grid.add(enemy_ship.pos, (Direction)d);
+                    for (int d = 0; d < 5; ++d) {
+                        const Vec pos = grid.add(enemy_ship.pos, (Direction)d);
 
-                    // If this is our structure don't avoid it just because there's an
-                    // adjacent enemy ship
-                    if (Game::me->has_structure_at(pos)) continue;
+                        // If this is our structure don't avoid it just because there's an
+                        // adjacent enemy ship
+                        if (Game::me->has_structure_at(pos)) continue;
 
-                    if (Game::num_players != 2) {
-                        // in 4-player games we'll currently be very pacifist and avoid moving
-                        // next to an enemy (if that enemy-is-cautious stuff didn't apply).
-                        //impassable(pos) = true;
-                        // TEST
-                        impassable(pos) = !we_win_fight_4p(pos);
-    //                    if (Game::turns_left() <= 100) {
+                        if (Game::num_players != 2) {
+                            impassable(pos) = !we_win_fight_4p(pos);
+                        } else {  // 2-player games
+                            impassable(pos) = !we_win_fight_2p(pos);
     //                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
     //                        else Log::flog_color(pos, 0, 125, 0, "passable");
-    //                    }
-                    } else {  // 2-player games
-                        impassable(pos) = !we_win_fight_2p(pos);
-//                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
-//                        else Log::flog_color(pos, 0, 125, 0, "passable");
+                        }
                     }
-                }
-            }
 
-            // Consider enemy structures impassable if there is an adjacent ship of that player, 
-            // because there's a good chance that ship will hit us if we move onto the structure.
-            for (Vec s : enemy.structures) {
-                if (grid.smallest_dist(s, enemy.ships) <= 1) {
-                    impassable(s) = true;
+                    // TEST: don't ram when we have high halite
+                    /*if (Game::num_players == 2) {
+                        // add this back, it's probably slightly better!
+                        if (my_ship.halite > MAX_HALITE_TO_RAM_2P.get(500)) {
+                            impassable(enemy_ship.pos) = true;
+                        }
+                    }*/
+
+                    // TEST: in 4p, it's probably not worth it to ram low-halite enemies
+                    /*if (Game::num_players != 2 && enemy_ship.halite < my_ship.halite && enemy_ship.halite < 500) { // this is also noise
+                        impassable(enemy_ship.pos) = true;
+                    }*/
+                }
+
+                // Consider enemy structures impassable if there is an adjacent ship of that player, 
+                // because there's a good chance that ship will hit us if we move onto the structure.
+                for (Vec s : enemy.structures) {
+                    if (grid.smallest_dist(s, enemy.ships) <= 1) {
+                        impassable(s) = true;
+                    }
                 }
             }
         }
@@ -290,7 +330,7 @@ struct Bot {
                 move_dest = p.tgt;
             } else {  // plan calls for moving to some target
                 // Plan a path that avoids any plans of equal or earlier priority.
-                PosSet blocked_for_pathing(impassable);
+                PosSet blocked_for_pathing(sid_to_impassable.at(p.ship.id));
                 PosSet prefer_to_avoid(false);
 
                 // consider_fleeing() may decide to flee onto a nominally "impassable" square.
@@ -302,6 +342,7 @@ struct Bot {
                 // Returners should consider enemy ships blocked, so they don't just casually ram them.
                 if (p.purpose == Purpose::Return) {
                     for (Ship e : Game::enemy_ships) {
+                        if (Game::me->has_structure_at(e.pos)) continue;  // never consider our structures blocked
                         blocked_for_pathing(e.pos) = true;
                     }
                 }
@@ -309,10 +350,6 @@ struct Bot {
                 // If we're evading a returner (which currently means just swapping with them)
                 // then don't consider their square blocked, even if it's, say, adjacent to an
                 // enemy. It's fine to risk an enemy collision in this case
-                if (p.purpose == Purpose::EvadeReturner && blocked_for_pathing(p.tgt)) {
-                    Log::flog_color(p.ship.pos, 0, 0, 255, "EVADER BLOCKED!");
-                    Log::flog_color(p.tgt, 0, 255, 255, "EVADER TGT!");
-                }
                 if (p.purpose == Purpose::EvadeReturner) blocked_for_pathing(p.tgt) = false;
 
                 // don't path over the dests of earlier priority plans
@@ -337,16 +374,6 @@ struct Bot {
                         blocked_for_pathing(vp.first) = true;
                     }
                 }
-
-                // TEST HACK:
-                // if you're a returner, all squares occupied by enemies are impassable, if they're not on one of our structures
-                // commented out b/c somehow it didn't help in self play
-                /*if (p.purpose == Purpose::Return) {
-                    for (Ship enemy_ship : Game::enemy_ships) {
-                        if (Game::me->has_structure_at(enemy_ship.pos)) continue;
-                        blocked_for_pathing(enemy_ship.pos) = true;
-                    }
-                }*/
 
                 Direction path_dir;
                 if (p.purpose == Purpose::Return) {
@@ -572,10 +599,9 @@ struct Bot {
         // - 2.0 is bad, like 30% winrate in self-play
         // - 4.0 has 50% winrate in self-play
         // - let's stick with 3.0 for now
-        const double inspiration_mult = 1 + Constants::INSPIRED_BONUS_MULTIPLIER; // = 3. TUNE
         for (Vec pos : grid.positions) {
             if (nearby_enemy_ship_count(pos) >= Constants::INSPIRATION_SHIP_COUNT) {
-                effective_halite(pos) *= inspiration_mult;
+                effective_halite(pos) *= MINING_INSPIRATION_MULT.get(3.0);  // TUNE
             }
         }
         
@@ -596,6 +622,8 @@ struct Bot {
             const double halite_needed = Constants::MAX_HALITE - ship.halite;
 
             //const int my_dist_from_base = sid_to_base_dist.at(ship.id);
+
+            const PosSet &impassable = sid_to_impassable.at(ship.id);
 
             // pick the best target.
             double best_halite_rate = -1e99;
@@ -670,7 +698,7 @@ struct Bot {
             if (ship_id == -1) continue;
             const Ship ship = Game::me->id_to_ship.at(ship_id);
 
-            Log::flog_color(tgt, 125, 64, 0, "tgt of %d", ship_id);
+            //Log::flog_color(tgt, 125, 64, 0, "tgt of %d", ship_id);
 
             if (ship.pos == tgt) {
                 plan(ship, ship.pos, Purpose::Mine);
@@ -731,7 +759,9 @@ struct Bot {
         }
 
         for (Vec pos : grid.positions) {
-            if (impassable(pos)) continue;
+            //if (impassable(pos)) continue;
+            // have to come up with something new now that impassable is ship-dependent:
+            if (dist_to_enemy_ship(pos) <= 1 && grid.smallest_dist(pos, Game::me->ships) > 0) continue;
 
             // don't build structures too close together
             if (dist_to_structure(pos) < MIN_DROPOFF_SEPARATION.get(17)) continue;  // TUNE. did so briefly, 17 seems OK
@@ -828,7 +858,7 @@ struct Bot {
             if (contains(Game::enemy_structures, enemy_ship.pos)) continue;  // don't ram on top of enemy structures
 
             // let's just use the check in set_impassable()
-            if (impassable(enemy_ship.pos)) continue;
+            //if (impassable(enemy_ship.pos)) continue;
 
             // find the best adjacent allied rammer, if any
             Ship best_rammer;
@@ -836,6 +866,7 @@ struct Bot {
             best_rammer.halite = 99999;
             for (Ship my_ship : Game::me->ships) {
                 if (grid.dist(my_ship.pos, enemy_ship.pos) != 1) continue;            
+                if (sid_to_impassable.at(my_ship.id)(enemy_ship.pos)) continue;  // if it's impassable, it's probably bad to ram on that square
                 if (!can_move(my_ship)) continue;
                 if (busy_ship_ids.count(my_ship.id)) continue;
                 if (my_ship.halite >= enemy_ship.halite) continue;  // TUNE. TODO: maybe relax this condition when we heavily outnumber?
@@ -857,58 +888,94 @@ struct Bot {
         }
     }
 
+
+
     void consider_fleeing()
     {
         if (Game::num_players != 2) return;
 
-        PosSet used_flee_dests(false);
-
+        vector<Ship> fleeing_ships;
         for (Ship ship : Game::me->ships) {
             if (busy_ship_ids.count(ship.id)) continue;
             if (returning_ship_ids.count(ship.id)) continue;  // returning ships will already path to avoid enemies. except, not necessarily??
             if (!can_move(ship)) continue;
+            const PosSet &impassable = sid_to_impassable.at(ship.id);
             if (!impassable(ship.pos)) continue;  // this location is apparently fine, don't flee
 
             // TODO: DONT JUST FLEE IF ITS IMPASSABLE! WE SHOULD ACTUALLY BE OUTNUMBERED BEFORE WE FLEE!
-
+            fleeing_ships.push_back(ship);
             Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
+        }
 
-            // be afraid!
-            // try to move toward a location ranked by passability, then ally distance
-            Vec best_dest;
-            int best_ally_dist = 999999;
-            bool found_dest = false;
-            for (int d = 0; d < 4; ++d) {
-                Vec adj = grid.add(ship.pos, (Direction)d);
-                if (used_flee_dests(adj)) continue;  // another ship is already fleeing to this square!
-                const int ally_dist = grid.smallest_dist_except(adj, Game::me->ships, ship);
-                if (ally_dist == 0) continue; // don't move onto ally positions. TODO: relax this
-                const int enemy_dist = grid.smallest_dist(adj, Game::enemy_ships);
-                if (enemy_dist == 0) continue; // don't move onto enemy positions. TODO: it might not be totally crazy to try to swap with the enemy??
-                // pass on this location if it's worse than an existing one
+        PosMap<int> dest_to_sid(-1);
+        map<int, Vec> sid_to_dest;
+
+        for (int i = 0; i < 3; ++i) { // go through the assignment process a few times
+            for (Ship ship : fleeing_ships) {
+                Log::flog(ship.pos, "=== consider_fleeing round %d ===", i);
+                // try to move toward a location ranked by
+                // - not-already-taken then
+                // - passability, then
+                // - not-currently-occupied-by-an-ally, then
+                // - structure distance (close is better)
+                // Note that we will steal an already-taken dest if it's our only option
+                const PosSet &impassable = sid_to_impassable.at(ship.id);
+                Vec best_dest;
+                int best_score = -999999999;
+                bool found_dest = false;
+                for (int d = 0; d < 4; ++d) {
+                    Vec adj = grid.add(ship.pos, (Direction)d);
+                    if (grid.smallest_dist(adj, Game::enemy_ships) == 0) continue; // don't move onto enemy positions. TODO: it might not be totally crazy to try to swap with the enemy??
+                    
+                    if (grid.smallest_dist(adj, Game::me->ships) == 0) continue;  // FIXME!!
+                    
+                    int score = 0;
+                    const int owner_sid = dest_to_sid(adj);
+                    if (owner_sid == -1 || owner_sid == ship.id) score += 1000000;  // adj isn't taken by someone else -- that's good
+                    if (!impassable(adj)) score += 10000;  // adj isn't impassable -- that's good
+                    score += 100 - grid.smallest_dist(adj, Game::me->structures);  // closer to a structure is better
+                    Log::flog(ship.pos, "%s score %d", +desc((Direction)d), score);
+
+                    // this location is better
+                    if (score > best_score) {
+                        best_dest = adj;
+                        best_score = score;
+                        found_dest = true;
+                    }
+                }
                 if (found_dest) {
-                    // prefer passable locations
-                    if (impassable(adj) && !impassable(best_dest)) continue;  
-                    // given equal passability, prefer smaller ally dist
-                    if ((impassable(adj) == impassable(best_dest)) && (ally_dist >= best_ally_dist)) continue;  
+                    Log::flog(ship.pos, "%s is best", +desc(grid.adj_dir(ship.pos, best_dest)));
+                    // first, relinquish any dest we previously owned
+                    auto it = sid_to_dest.find(ship.id);
+                    if (it != sid_to_dest.end()) {
+                        const Vec prev_dest = it->second;
+                        dest_to_sid(prev_dest) = -1;
+                        sid_to_dest.erase(it);
+                        Log::flog(ship.pos, "relinquished previous dest %s", +prev_dest.toString());
+                    }
+
+                    // next, if another ship currently claims this dest, kick them out
+                    const int owner_id = dest_to_sid(best_dest);
+                    if (owner_id != -1) {
+                        sid_to_dest.erase(owner_id);
+                        dest_to_sid(best_dest) = -1;  // unecessary, but whatever
+                        Log::flog(ship.pos, "kicked out previous owner %d", owner_id);
+                    }
+
+                    // finally, claim this dest
+                    sid_to_dest[ship.id] = best_dest;
+                    dest_to_sid(best_dest) = ship.id;
                 }
-                // this location is better
-                best_ally_dist = ally_dist;
-                best_dest = adj;
-                found_dest = true;
             }
-            if (found_dest) {
-                Log::flog(ship.pos, "fleeing to %s", +best_dest.toString());
-                if (grid.smallest_dist(best_dest, Game::enemy_ships) == 0) {
-                    Log::flog_color(best_dest, 255, 0, 0, "THIS SHIT IS CRAZY");
-                }
-                if (impassable(best_dest)) {
-                    Log::flog_color(best_dest, 255, 0, 255, "FLEEING TO IMPASSABLE SQUARE");
-                }
-                plan(ship, best_dest, Purpose::Flee);
-                used_flee_dests(best_dest) = true;
-                busy_ship_ids.insert(ship.id);
-            }
+        }
+
+        // finally, issue the actual plans
+        for (const pair<int, Vec> &sid_and_dest : sid_to_dest) {
+            const Ship ship = Game::me->id_to_ship.at(sid_and_dest.first);
+            const Vec dest = sid_and_dest.second;
+            Log::flog(ship.pos, "fleeing to %s", +dest.toString());
+            plan(ship, dest, Purpose::Flee);
+            busy_ship_ids.insert(ship.id);
         }
     }
 
@@ -1005,13 +1072,15 @@ int main(int argc, char **argv)
     Bot bot(argc, argv);
 
     // start the main game loop
-    while (true) {
+    do {
         Network::begin_turn();
 
         vector<Command> commands = bot.turn();
 
         Network::end_turn(commands);
-    }
+    } while (Game::turn < Constants::MAX_TURNS);
+
+    Log::log("Exiting.");
 
     return 0;
 }

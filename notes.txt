@@ -1,3 +1,63 @@
+
+
+                             Phi.MAX_HALITE_TO_RAM_2P=0    2p:  13-68    4p:   0- 0- 0- 0
+                           Phi.MAX_HALITE_TO_RAM_2P=200    2p:  36-46    4p:   0- 0- 0- 0
+                           Phi.MAX_HALITE_TO_RAM_2P=400    2p:  44-40    4p:   0- 0- 0- 0
+                           Phi.MAX_HALITE_TO_RAM_2P=600    2p:  42-41    4p:   0- 0- 0- 0
+                           Phi.MAX_HALITE_TO_RAM_2P=800    2p:  40-44    4p:   0- 0- 0- 0
+                          Phi.MAX_HALITE_TO_RAM_2P=1000    2p:  239-175    4p:   0- 0- 0- 0
+
+
+        for (int d : {8, 10, 12}) {
+            const int diff_d = num_allies_within[d] - num_enemies_within[d];
+            if (diff_d != 0) return diff_d > 0;
+        }
+        return true;
+ Phi    2p:  216-193    4p:   0- 0- 0- 0
+
+
+predictive ramming!
+
+
+time stuff
+
+try not letting high-halite ships collide, at least with low-halite ships
+
+try counting high-halite allies less when deciding whether to fight
+
+near enemy dropoffs, be more cautious, e.g. only count allies closer than the dropoff
+
+be more cautious with high halite
+
+really need per-ship impassability maps
+
+study teccles dropoffs
+
+don't ram too-low-halite enemies in 4p at end
+
+Let's do a fancy function to determine safety that's very different from the current one, lots of exponential decays or something
+
+
+suppose impassability is only a function of
+- num allies  in radius 1
+- num enemies in radius 1
+- num allies  in radius 2
+- num enemies in radius 2
+- num allies  in radius 3
+- num enemies in radius 3
+...
+Currently the rule is
+- num allies in radius 8 > num enemies in radius 8
+It seems possibily that even if this isn't true, if you have an overwhelming advantage at radius 4 you might want to go for it?
+And similarly if it isn't true but you have an overwhelming advantage at radius 10 you might want to go for it
+
+
+
+list of effects I'm ignoring
+-MINING_DIST_FROM_BASE_MULT=2.0 looked better by 326-223 for 2p, neutral for 4p
+-MINING_INSPIRATION_MULT=4.5    2p:  175-128
+
+
 NOTES ON COMBAT
 - Rachol probably prefers to ram high-halite ships with low-halite ships, which does sound good
 - Rachol is ramming late-game in 4p. And maybe prefers to ram the leader? Or at any rate strategically chooses who to go after
@@ -213,4 +273,11 @@ A result I'm not going to do anything about:
 
 
 
+
+                      Phi.MINING_INSPIRATION_MULT=2.999    2p:  137-166    4p:   0- 0- 0- 0
+                        Phi.MINING_INSPIRATION_MULT=3.5    2p:  175-128    4p:   0- 0- 0- 0
+                        Phi.MINING_INSPIRATION_MULT=4.0    2p:  150-153    4p:   0- 0- 0- 0
+                        Phi.MINING_INSPIRATION_MULT=4.5    2p:  175-128    4p:   0- 0- 0- 0
+                        Phi.MINING_INSPIRATION_MULT=5.0    2p:  171-132    4p:   0- 0- 0- 0
+                        Phi.MINING_INSPIRATION_MULT=3.0    2p:  707-808    4p:   0- 0- 0- 0
 

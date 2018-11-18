@@ -153,6 +153,7 @@ struct Bot {
         }
 
         return num_allies > num_enemies;  // TUNE
+//        return num_allies >= num_enemies;  // TUNE
     }
 
 
