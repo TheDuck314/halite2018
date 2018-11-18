@@ -47,6 +47,7 @@ struct Bot {
     Parameter<int> MAX_HALITE_TO_HELP_IN_FIGHT_2P;
     Parameter<int> MAX_HALITE_TO_HELP_IN_FIGHT_4P;
     Parameter<int> MAX_HALITE_TO_RAM_2P;
+    Parameter<int> HALITE_DIFF_CAUTION_THRESH_2P;
     Parameter<int> DEBUG_MAX_SHIPS;
     Parameter<int> RETURN_HALITE_THRESH;
     Parameter<bool> CONSIDER_RAMMING_IN_4P;
@@ -71,6 +72,7 @@ struct Bot {
         MAX_HALITE_TO_HELP_IN_FIGHT_2P("MAX_HALITE_TO_HELP_IN_FIGHT_2P"),
         MAX_HALITE_TO_HELP_IN_FIGHT_4P("MAX_HALITE_TO_HELP_IN_FIGHT_4P"),
         MAX_HALITE_TO_RAM_2P("MAX_HALITE_TO_RAM_2P"),
+        HALITE_DIFF_CAUTION_THRESH_2P("HALITE_DIFF_CAUTION_THRESH_2P"),
         DEBUG_MAX_SHIPS("DEBUG_MAX_SHIPS"),
         RETURN_HALITE_THRESH("RETURN_HALITE_THRESH"),
         CONSIDER_RAMMING_IN_4P("CONSIDER_RAMMING_IN_4P"),
@@ -93,6 +95,7 @@ struct Bot {
         MAX_HALITE_TO_HELP_IN_FIGHT_2P.parse(argc, argv);
         MAX_HALITE_TO_HELP_IN_FIGHT_4P.parse(argc, argv);
         MAX_HALITE_TO_RAM_2P.parse(argc, argv);
+        HALITE_DIFF_CAUTION_THRESH_2P.parse(argc, argv);
         DEBUG_MAX_SHIPS.parse(argc, argv);
         RETURN_HALITE_THRESH.parse(argc, argv);
         CONSIDER_RAMMING_IN_4P.parse(argc, argv);
@@ -142,7 +145,7 @@ struct Bot {
         return true;
     }
 
-    bool we_win_fight_2p(Vec pos)
+    bool we_win_fight_2p(Vec pos, bool higher_caution)
     {
         /*const int R = FIGHT_COUNT_RADIUS_2P.get(8);  // TUNE
         const int num_enemies = grid.num_within_dist(pos, Game::enemy_ships, R);
@@ -176,7 +179,11 @@ struct Bot {
             while (dist <= max_R) num_allies_within[dist++] += 1;
         }
 
-        return num_allies_within[8] >= num_enemies_within[8];
+        if (higher_caution) {
+            return num_allies_within[8] > num_enemies_within[8];
+        } else {
+            return num_allies_within[8] >= num_enemies_within[8];
+        }
 
         /*
         for (int d : {8, 10, 12}) {
@@ -251,12 +258,15 @@ struct Bot {
                         // adjacent enemy ship
                         if (Game::me->has_structure_at(pos)) continue;
 
-                        if (Game::num_players != 2) {
-                            impassable(pos) = !we_win_fight_4p(pos);
-                        } else {  // 2-player games
-                            impassable(pos) = !we_win_fight_2p(pos);
+                        if (Game::num_players == 2) {
+                            // high positive HALITE_DIFF_CAUTION_THRESH_2P means we will be less cautious, e.g. only when we have 900 and they have 100
+                            // high negative HALITE_DIFF_CAUTION_THRESH_2P means we will be more cautious, e.g. even when we have 100 and they have 900
+                            const bool higher_caution = my_ship.halite - enemy_ship.halite > HALITE_DIFF_CAUTION_THRESH_2P.get(0);
+                            impassable(pos) |= !we_win_fight_2p(pos, higher_caution);
     //                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
     //                        else Log::flog_color(pos, 0, 125, 0, "passable");
+                        } else {  // 4-player games
+                            impassable(pos) |= !we_win_fight_4p(pos);
                         }
                     }
 
@@ -901,6 +911,11 @@ struct Bot {
             if (!can_move(ship)) continue;
             const PosSet &impassable = sid_to_impassable.at(ship.id);
             if (!impassable(ship.pos)) continue;  // this location is apparently fine, don't flee
+
+/*            if (ship.halite < 100) {
+                Log::flog_color(ship.pos, 0, 255, 0, "i have low halite so im not afraid");
+                continue;  // TEST don't fee with low halite
+            }*/
 
             // TODO: DONT JUST FLEE IF ITS IMPASSABLE! WE SHOULD ACTUALLY BE OUTNUMBERED BEFORE WE FLEE!
             fleeing_ships.push_back(ship);

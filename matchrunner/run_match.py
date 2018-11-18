@@ -43,6 +43,7 @@ LOCAL_BOT_BINARIES = {
     "Tau":     "/home/greg/coding/halite/2018/repo/bots/18_tau/build/MyBot",
     "Upsilon": "/home/greg/coding/halite/2018/repo/bots/19_upsilon/build/MyBot",
     "Phi":     "/home/greg/coding/halite/2018/repo/bots/20_phi/build/MyBot",
+    "Chi":     "/home/greg/coding/halite/2018/repo/bots/21_chi/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -134,7 +135,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken6"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken7"  # submitting another request won't do anything unless you increment this token
 #EC2_INSTANCE_DNS_NAME = "ec2-user@ec2-54-202-184-232.us-west-2.compute.amazonaws.com"
 EC2_INSTANCE_DNS_NAME = None
 
@@ -297,12 +298,12 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Phi"]
-    ref_bot = "Upsilon"
+    challenger_bots = ["Chi"]
+    ref_bot = "Phi"
     """
-    challenger_base = "Phi"
-    param = "MAX_HALITE_TO_RAM_2P"
-    values = [0, 200, 400, 600, 800, 1000]
+    challenger_base = "Chi"
+    param = "HALITE_DIFF_CAUTION_THRESH_2P"
+    values = [-500, -250, 250, 500, 0]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -311,8 +312,8 @@ def main():
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
     ref_bot = challenger_bots.pop()
-    """
     #ref_bot = "Tau"
+    """
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots

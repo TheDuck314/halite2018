@@ -106,7 +106,7 @@ final rank=1 μ=96.03 σ=about 0.45 20181116 12:48am
 Against Tau: 2p:  254-140    4p:  277-191-148-137
 
 v31 19_upsilon
-final rank=1 μ=96.85 σ=0.41
+final rank=1 μ=96.85 σ=0.41 20181117 10:20pm
 - return thresh 1000 -> 950 
                        Upsilon.RETURN_HALITE_THRESH=900    2p:  16- 6    4p:  17-15- 7- 6
                        Upsilon.RETURN_HALITE_THRESH=950    2p:  13- 9    4p:  24- 7- 8- 4
@@ -114,7 +114,7 @@ final rank=1 μ=96.85 σ=0.41
                       Upsilon.RETURN_HALITE_THRESH=1000    2p:  25-41    4p:  77-93-112-111
 
 v32 20_phi
-REMEMBER TO REENABLE CAUTIOUSNESS EXPLOITATION
+final rank=2 (sort of) μ=95.73 σ=1.28 at 20181117 11:45pm
 2p update:
 - we_win_fight_2p is num_allies_within[8] >= num_enemies_within[8] with >= rather than > . This was a quite high winrate
   against Upsilon, not sure exactly the numbers. This is probably too optimistic since it's just exploiting the
@@ -122,3 +122,8 @@ REMEMBER TO REENABLE CAUTIOUSNESS EXPLOITATION
 - consider_fleeing: try to flee toward closest structure, not closest allied ship, and better system for resolving conflicts
   where two fleeing ships may interfere with each other. 385-122 against not doing this
 Overall 2p:  219-37 against Upsilon
+
+v33 21_chi
+- we_win_fight_2p is back to num_allies_within[8] > num_enemies_within[8] for squares adjacent to an enemy ship that
+  has less halite than us. 324-171 against Phi
+

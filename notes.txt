@@ -16,7 +16,19 @@
  Phi    2p:  216-193    4p:   0- 0- 0- 0
 
 
+don't flee if we have like <50 halite?
+
+really need halite-based ramming. it's hard to see how ramming a 600 with a 50 could turn out badly, on average
+
+if there's an adjacent enemy with at least 500 less halite than us, apply a stricter safety standard (> not >=)
+
+when we're on the border of whether it's safe, that's when it's especially import to judge by ship halite. For example, if each
+player has 1 ship and no one else is anywhere near, then the lower halite ship should ram the higher halite ship, and the higher
+halite ship should flee.
+
 predictive ramming!
+
+still think something along the lines of "if one player really outnumbers in a small radius, they win the fight regardless of the big radius circumstances" should be true
 
 
 time stuff
