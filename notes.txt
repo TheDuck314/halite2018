@@ -40,6 +40,8 @@ let's do something like: if a guy's a known rammer, then it's unsafe to move nex
 ships with < 500 halite if we have more halite than that ship, and also we should flee if we find
 ourself in that situation. maybe?
 
+there's some bug where we don't always flee someone who tried to ram us last turn.
+
 
 
 don't flee if we have like <50 halite?
