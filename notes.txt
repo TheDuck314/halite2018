@@ -23,6 +23,11 @@ but in a re-test:
  Phi    2p:  216-193    4p:   0- 0- 0- 0
 
 
+BACKPORT THE OMEGA FIX TO PSI
+
+DISABLE CAUTIOUSNESS EXPLOITATION IN PSI AND OMEGA
+
+
 let fleeing ships push others out of the way!! this will probably be super good, locally anyway
 
 there's still more to do on low-halite vs high-halite ramming. study 2p games against teccles

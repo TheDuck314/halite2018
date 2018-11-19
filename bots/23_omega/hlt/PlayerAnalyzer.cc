@@ -41,7 +41,7 @@ void PlayerAnalyzer::analyze()
         vector<int> &at_risk_sids = data.at_risk_sids;
         PosSet &unsafe_map = data.unsafe_map;
         PosSet &enemy_ship_map = data.enemy_ship_map;
-        set<int> rammer_sids = data.rammer_sids;
+        set<int> &rammer_sids = data.rammer_sids;
         PlayerStats &stats = data.stats;
         const Player &player = Game::players[pid];
 

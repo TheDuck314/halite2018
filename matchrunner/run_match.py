@@ -45,6 +45,7 @@ LOCAL_BOT_BINARIES = {
     "Phi":     "/home/greg/coding/halite/2018/repo/bots/20_phi/build/MyBot",
     "Chi":     "/home/greg/coding/halite/2018/repo/bots/21_chi/build/MyBot",
     "Psi":     "/home/greg/coding/halite/2018/repo/bots/22_psi/build/MyBot",
+    "Omega":   "/home/greg/coding/halite/2018/repo/bots/23_omega/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -136,7 +137,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken9"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken10"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -298,8 +299,8 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Psi"]
-    ref_bot = "Chi"
+    challenger_bots = ["Omega"]
+    ref_bot = "Psi"
     """
     challenger_base = "Psi"
     param = "MINING_NPV_FUDGE_FACTOR"
