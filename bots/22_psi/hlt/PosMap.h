@@ -43,7 +43,7 @@ class PosMap final
     void fill(T filler) { std::fill(arr, arr + N, filler); }
 
   private:
-      T *arr;
+      T *arr;  // not vector, because vector<bool> is crazy
       int N;
 };
 

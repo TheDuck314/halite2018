@@ -27,7 +27,8 @@ struct Bot {
     Vec planned_dropoff_pos;
     map<int, PosSet> sid_to_impassable;  // recomputed by set_impassable each turn
     PosSet ram_targets; // squares we are ramming this turn
-    //map<int, int> sid_to_last_structure_turn;
+    map<int, int> sid_to_last_structure_turn;
+    bool still_spawning_ships = true;
 
     // GLOBAL CONSTANTS
     const int TURNS_LEFT_TO_RETURN = 15;  // TUNE
@@ -41,6 +42,7 @@ struct Bot {
     Parameter<double> ENEMY_SHIP_HALITE_FRAC;
     Parameter<double> DROPOFF_PENALTY_FRAC_PER_DIST;
     Parameter<double> MINING_INSPIRATION_MULT;
+    Parameter<double> MINING_NPV_FUDGE_FACTOR;
     Parameter<int> MIN_DROPOFF_SEPARATION;
     Parameter<int> MAX_TURNS_LEFT_TO_RAM_4P;
     Parameter<int> FIGHT_COUNT_RADIUS_2P;
@@ -66,6 +68,7 @@ struct Bot {
         ENEMY_SHIP_HALITE_FRAC("ENEMY_SHIP_HALITE_FRAC"),
         DROPOFF_PENALTY_FRAC_PER_DIST("DROPOFF_PENALTY_FRAC_PER_DIST"),
         MINING_INSPIRATION_MULT("MINING_INSPIRATION_MULT"),
+        MINING_NPV_FUDGE_FACTOR("MINING_NPV_FUDGE_FACTOR"),
         MIN_DROPOFF_SEPARATION("MIN_DROPOFF_SEPARATION"),
         MAX_TURNS_LEFT_TO_RAM_4P("MAX_TURNS_LEFT_TO_RAM_4P"),
         FIGHT_COUNT_RADIUS_2P("FIGHT_COUNT_RADIUS_2P"),
@@ -89,6 +92,7 @@ struct Bot {
         ENEMY_SHIP_HALITE_FRAC.parse(argc, argv);
         DROPOFF_PENALTY_FRAC_PER_DIST.parse(argc, argv);
         MINING_INSPIRATION_MULT.parse(argc, argv);
+        MINING_NPV_FUDGE_FACTOR.parse(argc, argv);
         MIN_DROPOFF_SEPARATION.parse(argc, argv);
         MAX_TURNS_LEFT_TO_RAM_4P.parse(argc, argv);
         FIGHT_COUNT_RADIUS_2P.parse(argc, argv);
@@ -106,6 +110,12 @@ struct Bot {
 
     void plan(const Ship &ship, Vec tgt, Purpose purpose)
     {
+        for (Plan p : plans) {
+            if (p.ship.id == ship.id) {
+                Log::die("attempt to add duplicate plan ship=%s tgt=%s purpose=%s but that ship already has plan %s",
+                    +ship.toString(), +tgt.toString(), +desc(purpose), +p.toString());
+            }
+        }
         plans.push_back({ship, tgt, purpose});
     }
 
@@ -122,13 +132,9 @@ struct Bot {
         return (square_halite + Constants::EXTRACT_RATIO - 1) / Constants::EXTRACT_RATIO;  // divide and round up
     }
 
-    bool should_spawn()
+    bool want_more_ships()
     {
         if ((int)Game::me->ships.size() >= DEBUG_MAX_SHIPS.get(99999)) return false;
-
-        int min_halite_to_spawn = Constants::SHIP_COST;
-        if (want_dropoff) min_halite_to_spawn += Constants::DROPOFF_COST;
-        if (Game::me->halite < min_halite_to_spawn) return false;  // can't spawn
 
         int halite_left = 0;
         for (Vec pos : grid.positions) halite_left += grid(pos).halite;
@@ -143,6 +149,14 @@ struct Bot {
         }
 
         return true;
+    }
+
+    bool can_afford_a_ship()
+    {
+        int min_halite_to_spawn = Constants::SHIP_COST;
+        if (want_dropoff) min_halite_to_spawn += Constants::DROPOFF_COST;
+        return Game::me->halite >= min_halite_to_spawn;
+
     }
 
     bool we_win_fight_2p(Vec pos, bool higher_caution)
@@ -235,8 +249,8 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//                    if (enemy_is_cautious) {  // currently only ever true in 4p
-                    if (false) {  // can be useful to turn this off for testing
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
+//                    if (false) {  // can be useful to turn this off for testing
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
@@ -265,7 +279,7 @@ struct Bot {
                             impassable(pos) |= !we_win_fight_2p(pos, higher_caution);
     //                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
     //                        else Log::flog_color(pos, 0, 125, 0, "passable");
-                        } else {  // 4-player games
+                        } else {  // 4-player games                            
                             impassable(pos) |= !we_win_fight_4p(pos);
                         }
                     }
@@ -301,7 +315,7 @@ struct Bot {
     // generate the commands for those guys now, and remove them from the list of
     // regular plans. That way resolve_plans_into_commands() doesn't have to worry
     // about them.
-    void make_final_collapse_commands(vector<Command> &commands)
+    void make_special_final_collapse_commands(vector<Command> &commands)
     {
         if (Game::turns_left() > TURNS_LEFT_TO_RETURN + 1) return;
 
@@ -458,7 +472,7 @@ struct Bot {
             Vec move_dest = vp.first;
             Plan p = vp.second;
             Direction d = grid.adj_dir(p.ship.pos, move_dest);
-    //        Log::flog(p.ship, "move_dest %s: %s is moving %s", +move_dest.toString(), +p.toString(), +desc(d));
+            Log::flog(p.ship, "move_dest %s: %s is moving %s", +move_dest.toString(), +p.toString(), +desc(d));
             commands.push_back(Command::move(p.ship, d));
 
             /*if (grid.dist(move_dest, p.tgt) > grid.dist(p.ship.pos, p.tgt)) {
@@ -486,8 +500,16 @@ struct Bot {
         return true;
     }
 
-    void plan_returning(const vector<Ship> &returners)
+    void plan_returning()
     {
+        vector<Ship> returners;
+        for (Ship s : Game::me->ships) {
+            if (busy_ship_ids.count(s.id)) continue;
+            if (returning_ship_ids.count(s.id)) returners.push_back(s);
+        }
+
+        for (Ship s : returners) Log::log("returners: %s", +s.toString());
+
         // compute the average halite richness near each possible destination
         vector<Vec> return_targets = Game::me->structures;
         if (want_dropoff) {
@@ -564,6 +586,7 @@ struct Bot {
                 continue;
             }
             
+            Log::flog(ship.pos, "%s returning to %s", +ship.toString(), +best_tgt.toString());
             plan(ship, best_tgt, Purpose::Return);
         }
     }
@@ -625,6 +648,7 @@ struct Bot {
         PosMap<int> tgt_to_ship_id(-1);
         deque<Ship> q;
         std::copy(miners.begin(), miners.end(), std::back_inserter(q));
+        map<int, double> sid_to_route_finish_time;
         while (!q.empty()) {
             Ship ship = q.front();
             q.pop_front();
@@ -689,6 +713,7 @@ struct Bot {
                 if (overall_halite_rate > best_halite_rate) {
                     best_halite_rate = overall_halite_rate;
                     best_tgt = pos;
+                    sid_to_route_finish_time[ship.id] = total_time;
                 }
             }
 
@@ -708,7 +733,48 @@ struct Bot {
             if (ship_id == -1) continue;
             const Ship ship = Game::me->id_to_ship.at(ship_id);
 
-            //Log::flog_color(tgt, 125, 64, 0, "tgt of %d", ship_id);
+            /*if (Game::turn < 200 && still_spawning_ships && (ship.halite > 400)) {
+                const int here_to_tgt = grid.dist(ship.pos, tgt);
+                const int tgt_to_base = grid.smallest_dist(tgt, Game::me->structures);
+                const int here_to_base = grid.smallest_dist(ship.pos, Game::me->structures);
+                if (here_to_tgt + tgt_to_base > here_to_base && 
+                    // I'm neglecting the fact that using my own personal round trip time may not be
+                    // correct for computing the NPV of halite, which instead depends on the round trip time of
+                    // newly spawned ships. So maybe I only want to do this whole thing if the closest structure to
+                    // me is the shipyard. Then my round trip time should be a not-crazy estimate for new ships.
+                    here_to_base == grid.dist(ship.pos, Game::me->shipyard)) {
+                    // going here -> target -> base is a longer distance than just going here->base.
+                    // Do a crude NPV calculation to guess if just returning to base right now is better.
+                    // We don't do this if target is on the way to the base because in that case it seems
+                    // like we might as well just go to the target and get some extra halite on our way
+                    // back.
+                    //Log::flog_color(tgt, 125, 64, 0, "tgt of %d", ship_id);
+                    double route_finish_time = sid_to_route_finish_time.at(ship.id);
+                    route_finish_time *= 0.8;  // the initial value tends to be pessimistic
+                    Log::flog(ship.pos, "route_finish_time: %f", route_finish_time);
+                    const int time_since_structure = Game::turn - sid_to_last_structure_turn.at(ship.id);
+                    Log::flog(ship.pos, "time_since_structure: %d", time_since_structure);
+                    double est_round_trip_time = time_since_structure + route_finish_time;
+                    est_round_trip_time *= 1.3;  // the initial value tends to be optimistic
+                    Log::flog(ship.pos, "est_round_trip_time: %f", est_round_trip_time);
+                    const int return_time = grid.smallest_dist(ship.pos, Game::me->structures);
+                    Log::flog(ship.pos, "return_time: %d", return_time);
+                    const double lhs = 0.5 * (1 + 0.001 * ship.halite);
+                    // increasing MINING_NPV_FUDGE_FACTOR above 1.0 makes it easier to decide to
+                    // return home early. decreasing it makes it harder to decide to return home early
+                    const double rhs = pow(0.5, MINING_NPV_FUDGE_FACTOR.get(1.0) * (route_finish_time - return_time) / est_round_trip_time);
+                    Log::flog(ship.pos, "lhs: %f", lhs);
+                    Log::flog(ship.pos, "rhs: %f", rhs);
+                    if (lhs > rhs) {
+                        // return instead!
+                        Log::flog_color(ship.pos, 255, 0, 0, "RETURNING INSTEAD of going to tgt %s!", +tgt.toString());
+                        Log::flog_color(tgt, 0, 0, 255, "spurned tgt of %d", ship.id);
+                        returning_ship_ids.insert(ship.id);
+                        continue;
+                    }
+                }
+            }*/
+
 
             if (ship.pos == tgt) {
                 plan(ship, ship.pos, Purpose::Mine);
@@ -902,8 +968,6 @@ struct Bot {
 
     void consider_fleeing()
     {
-        if (Game::num_players != 2) return;
-
         vector<Ship> fleeing_ships;
         for (Ship ship : Game::me->ships) {
             if (busy_ship_ids.count(ship.id)) continue;
@@ -911,6 +975,27 @@ struct Bot {
             if (!can_move(ship)) continue;
             const PosSet &impassable = sid_to_impassable.at(ship.id);
             if (!impassable(ship.pos)) continue;  // this location is apparently fine, don't flee
+
+            if (Game::num_players != 2) {
+                // in 4p games, it's much less likely that we are actually going to get rammed,
+                // even if this square is nominally unsafe.
+                // Let's ask the PlayerAnalyzer if it thinks any adjacent ships are going to ram us this turn
+                bool gonna_get_rammed = false;
+                for (int pid = 0; pid < Game::num_players; ++pid) {
+                    if (pid == Game::my_player_id) continue;
+                    for (const Ship enemy_ship : Game::players[pid].ships) {
+                        if (!can_move(enemy_ship)) continue;  // can't ram if you can't move
+                        if (grid.dist(enemy_ship.pos, ship.pos) == 1 &&
+                            PlayerAnalyzer::player_might_ram(pid, ship, enemy_ship)) {
+                            Log::flog_color(ship.pos, 255, 125, 0, "IM GONNA GET RAMMED");
+                            Log::flog_color(enemy_ship.pos, 255, 0, 0, "THIS GUYS GONNA RAM ME");
+                            gonna_get_rammed = true;
+                            break;
+                        }
+                    }
+                }
+                if (!gonna_get_rammed) continue;  // we're probably OK, don't flee
+            }
 
 /*            if (ship.halite < 100) {
                 Log::flog_color(ship.pos, 0, 255, 0, "i have low halite so im not afraid");
@@ -994,17 +1079,34 @@ struct Bot {
         }
     }
 
+    // possibly this should be merged into plan_returning somehow?
+    void plan_final_collapse()
+    {
+        for (Ship ship : Game::me->ships) {
+            if (busy_ship_ids.count(ship.id)) continue;
+
+            // at the end of the game, return to the closest base
+            const Vec closest_structure = grid.closest(ship.pos, Game::me->structures);
+            const int dist_from_base = grid.dist(ship.pos, closest_structure);
+            if (Game::turns_left() < dist_from_base + TURNS_LEFT_TO_RETURN) {
+                plan(ship, closest_structure, Purpose::Return);
+                busy_ship_ids.insert(ship.id);
+                continue;
+            }
+        }
+    }
+
     vector<Command> turn()
     {
         plans.clear();
         busy_ship_ids.clear();
         ram_targets.fill(false);
 
-        /*for (Ship s : Game::me->ships) {
+        for (Ship s : Game::me->ships) {
             if (Game::me->has_structure_at(s.pos)) {
                 sid_to_last_structure_turn[s.id] = Game::turn;
             }
-        }*/
+        }
 
         PlayerAnalyzer::analyze();
 
@@ -1018,19 +1120,12 @@ struct Bot {
 
         consider_fleeing();    
 
+        plan_final_collapse();
+
         vector<Ship> miners;
-        vector<Ship> returners;
 
         for (const Ship &ship : Game::me->ships) {
             if (busy_ship_ids.count(ship.id)) continue;
-
-            // at the end of the game, return to the closest base
-            const Vec closest_structure = grid.closest(ship.pos, Game::me->structures);
-            const int dist_from_base = grid.dist(ship.pos, closest_structure);
-            if (Game::turns_left() < dist_from_base + TURNS_LEFT_TO_RETURN) {
-                plan(ship, closest_structure, Purpose::Return);
-                continue;
-            }
 
             bool returning;
             if (returning_ship_ids.count(ship.id)) {  // this ship has been returning
@@ -1049,15 +1144,13 @@ struct Bot {
                 }
             }
 
-            if (returning) {
-                returners.push_back(ship);
-            } else {
+            if (!returning) {
                 miners.push_back(ship);
             }
         }
 
-        plan_returning(returners);
         plan_mining(miners);
+        plan_returning();
 
         // let's try this as a postprocessing step. anyone who can't move 
         // must plan to stay where they are.
@@ -1068,10 +1161,12 @@ struct Bot {
             }
         }
 
-        make_final_collapse_commands(commands);
+        make_special_final_collapse_commands(commands);
 
         resolve_plans_into_commands(commands);
-        if (should_spawn() && shipyard_will_be_clear(commands)) {
+
+        still_spawning_ships = want_more_ships();
+        if (still_spawning_ships && can_afford_a_ship() && shipyard_will_be_clear(commands)) {
             commands.push_back(Command::generate());
         }
 
@@ -1092,6 +1187,7 @@ int main(int argc, char **argv)
 
         vector<Command> commands = bot.turn();
 
+        PlayerAnalyzer::remember_my_commands(commands);
         Network::end_turn(commands);
     } while (Game::turn < Constants::MAX_TURNS);
 

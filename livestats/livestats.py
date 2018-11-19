@@ -20,8 +20,6 @@ print("response contains {} games".format(len(response)))
 
 my_stats = []
 
-opponent_counts = defaultdict(lambda: 0)
-
 seen_game_ids = set()
 
 for game_dict in response:
@@ -61,8 +59,6 @@ for game_dict in response:
         if int(userid_str) == my_userid:
             my_rank = rank
             my_version = version            
-        else:
-            opponent_counts[username] += 1
     game_id = game_dict["game_id"]
     replay_link = "https://halite.io/play/?game_id={}".format(game_id)
     
@@ -95,6 +91,9 @@ pd.set_option("display.width", 300)
 def with_player(stats, opp):
     return stats[stats.Players.apply(lambda x: opp in x)]
 
+def without_player(stats, opp):
+    return stats[stats.Players.apply(lambda x: opp not in x)]
+
 def header(title):
     print("============ {} ============".format(title.upper()))
 
@@ -114,6 +113,11 @@ for opp in ["TheDuck314", "teccles", "TonyK", "reCurs3", "Rachol", "zxqfl", "shu
     if opp == my_username:
         continue
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))
+
+for opp in ["teccles"]:
+    if opp == my_username:
+        continue
+    show_stats(without_player(my_stats, opp), "Games **WITHOUT** {}".format(opp))
 
 header("2p losses")
 tmp = my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()
@@ -154,7 +158,13 @@ print(tmp.to_string())
 print()
 print()
 
-header("opponent counts")
-print(pd.Series(opponent_counts).sort_values(ascending=False))
+header("2p player counts")
+all_players = [p for players in my_stats.query("NumPlayers == 2")["Players"].tolist() for p in players]
+print(pd.Series(all_players).value_counts().sort_values(ascending=False))
+print()
+
+header("4p player counts")
+all_players = [p for players in my_stats.query("NumPlayers == 4")["Players"].tolist() for p in players]
+print(pd.Series(all_players).value_counts().sort_values(ascending=False))
 
 #print(ret)

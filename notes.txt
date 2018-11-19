@@ -1,4 +1,11 @@
 
+                        Psi.MINING_NPV_FUDGE_FACTOR=1.0    2p:  133-86    4p:  133-96-113-93
+                        Psi.MINING_NPV_FUDGE_FACTOR=0.0    2p:  86-133    4p:  302-339-322-342
+but in a re-test:
+                                                    Psi    2p:  188-153    4p:  168-167-135-154
+                                                    Chi    2p:  153-188    4p:  456-457-489-470
+
+
 
                              Phi.MAX_HALITE_TO_RAM_2P=0    2p:  13-68    4p:   0- 0- 0- 0
                            Phi.MAX_HALITE_TO_RAM_2P=200    2p:  36-46    4p:   0- 0- 0- 0
@@ -16,19 +23,44 @@
  Phi    2p:  216-193    4p:   0- 0- 0- 0
 
 
+let fleeing ships push others out of the way!! this will probably be super good, locally anyway
+
+there's still more to do on low-halite vs high-halite ramming. study 2p games against teccles
+he always has much fewer dropped, and I guess must be extra cautious with high-halite ships.
+I sometimes ram 800 halite ships into 100 halite ships
+also, he seems quite reckless with low-halite ships
+it's hard to see how ramming a 600 with a 50 could turn out badly, on average
+
+
+Rachol and teccles both have evasion in 4p see https://halite.io/play/?game_id=1993792 where teccles often moves to evade mlomb (who rams me a lot)
+
+predict movement of returners and use it for safety?
+
+let's do something like: if a guy's a known rammer, then it's unsafe to move next to one of his
+ships with < 500 halite if we have more halite than that ship, and also we should flee if we find
+ourself in that situation. maybe?
+
+
+
 don't flee if we have like <50 halite?
 
-really need halite-based ramming. it's hard to see how ramming a 600 with a 50 could turn out badly, on average
+at some point I need a solution for games like https://halite.io/play/?game_id=1987649
+where I get blocked off from a dropoff.
+It's probably as simple as judging nearest dropoff by bfs rather than dist()
 
-if there's an adjacent enemy with at least 500 less halite than us, apply a stricter safety standard (> not >=)
 
-when we're on the border of whether it's safe, that's when it's especially import to judge by ship halite. For example, if each
-player has 1 ship and no one else is anywhere near, then the lower halite ship should ram the higher halite ship, and the higher
-halite ship should flee.
+think more about generalized cautiousness detection
+
+consider returning early based on a halite discount rate calculation. I.e. we will delay our next load of halite by
+some number of turns, but we'll deliver our current amount earlier.
+
+fix fluorine flog thing
 
 predictive ramming!
 
 still think something along the lines of "if one player really outnumbers in a small radius, they win the fight regardless of the big radius circumstances" should be true
+
+really need halite-provenance in fluorine
 
 
 time stuff

@@ -124,6 +124,17 @@ final rank=2 (sort of) μ=95.73 σ=1.28 at 20181117 11:45pm
 Overall 2p:  219-37 against Upsilon
 
 v33 21_chi
+final rank=1 μ=97.44 σ=0.55 at 20181118 7:47pm
 - we_win_fight_2p is back to num_allies_within[8] > num_enemies_within[8] for squares adjacent to an enemy ship that
   has less halite than us. 324-171 against Phi
+
+v34 22_psi
+- consider_fleeing operates in 4p mode too. It only flees when PlayerAnalyzer thinks a specific enemy ship may ram us.
+  PlayerAnalyzer thinks a ship may ram us if
+   - that specific ship tried to ram someone last turn, or
+   - that player has rammed a stationary ship of ours at least 3 times, and that specific ship has < 500 halite, and our ship has more halite than the enemy ship
+  This is 83-27-21-8 against Chi locally. One reason this might be inflated: the local opponent is cautious, so we rarely end up next
+  to an enemy ship, unless they really are trying to ram, so there won't be too many false positives. But a reason for hope: if we face
+  a true cautious opponent on the server, then PlayerAnalyzer will know they're cautious, and squares next to them will be passable, so
+  we won't try to flee just b/c we're next to them, since we don't flee from passable squares.
 
