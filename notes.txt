@@ -1,3 +1,10 @@
+                    OmegaPlusOne.MAX_HALITE_TO_RAM_2P=0    2p:  58-91    4p:   0- 0- 0- 0
+                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=250    2p:  78-72    4p:   0- 0- 0- 0
+                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=500    2p:  82-69    4p:   0- 0- 0- 0
+                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=750    2p:  80-69    4p:   0- 0- 0- 0
+                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=999    2p:  83-66    4p:   0- 0- 0- 0
+                 OmegaPlusOne.MAX_HALITE_TO_RAM_2P=1000    2p:  367-381    4p:   0- 0- 0- 0
+
 
                         Psi.MINING_NPV_FUDGE_FACTOR=1.0    2p:  133-86    4p:  133-96-113-93
                         Psi.MINING_NPV_FUDGE_FACTOR=0.0    2p:  86-133    4p:  302-339-322-342
@@ -42,6 +49,7 @@ it's hard to see how ramming a 600 with a 50 could turn out badly, on average
 
 predict movement of returners and use it for safety?
 
+to stop bleeding halite against teccles: consider making my high-halite ships very afraid of enemy low-halite ships
 
 
 don't flee if we have like <50 halite?

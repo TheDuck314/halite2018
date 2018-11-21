@@ -193,10 +193,15 @@ struct Bot {
             while (dist <= max_R) num_allies_within[dist++] += 1;
         }
 
+        // this doesn't matter in local play but I have seen too many live replays
+        // where I get into a ramming war within 2 squares of an enemy structure:
+        int enemy_factor = 1;
+        if (grid.smallest_dist(pos, Game::enemy_structures) <= 2) enemy_factor = 2;
+
         if (higher_caution) {
-            return num_allies_within[8] > num_enemies_within[8];
+            return num_allies_within[8] > enemy_factor * num_enemies_within[8];
         } else {
-            return num_allies_within[8] >= num_enemies_within[8];
+            return num_allies_within[8] >= enemy_factor * num_enemies_within[8];
         }
 
         /*
@@ -249,8 +254,8 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-//                    if (enemy_is_cautious) {  // currently only ever true in 4p
-                    if (false) {  // can be useful to turn this off for testing
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
+//                    if (false) {  // can be useful to turn this off for testing
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
@@ -298,13 +303,12 @@ struct Bot {
                         }
                     }*/
 
-                    // TEST: don't ram when we have high halite
-                    /*if (Game::num_players == 2) {
-                        // add this back, it's probably slightly better!
-                        if (my_ship.halite > MAX_HALITE_TO_RAM_2P.get(500)) {
+                    // don't ram when we have high halite
+                    if (Game::num_players == 2) {
+                        if (enemy_ship.halite < my_ship.halite || my_ship.halite > MAX_HALITE_TO_RAM_2P.get(500)) {
                             impassable(enemy_ship.pos) = true;
                         }
-                    }*/
+                    }
 
                     // TEST: in 4p, it's probably not worth it to ram low-halite enemies
                     /*if (Game::num_players != 2 && enemy_ship.halite < my_ship.halite && enemy_ship.halite < 500) { // this is also noise

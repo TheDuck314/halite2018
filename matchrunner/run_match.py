@@ -46,6 +46,7 @@ LOCAL_BOT_BINARIES = {
     "Chi":     "/home/greg/coding/halite/2018/repo/bots/21_chi/build/MyBot",
     "Psi":     "/home/greg/coding/halite/2018/repo/bots/22_psi/build/MyBot",
     "Omega":   "/home/greg/coding/halite/2018/repo/bots/23_omega/build/MyBot",
+    "OmegaPlusOne":   "/home/greg/coding/halite/2018/repo/bots/24_omegaplusone/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -299,12 +300,12 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Omega"]
-    ref_bot = "Psi"
+    challenger_bots = ["OmegaPlusOne"]
+    ref_bot = "Omega"
     """
-    challenger_base = "Psi"
-    param = "MINING_NPV_FUDGE_FACTOR"
-    values = [0.7, 1.3, 1.0]
+    challenger_base = "OmegaPlusOne"
+    param = "MAX_HALITE_TO_RAM_2P"
+    values = [0, 250, 500, 750, 1000]
 #    values = [0.0]
     challenger_bots = []
     for val in values:
@@ -313,8 +314,8 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    ref_bot = challenger_bots.pop()
-    #ref_bot = "Chi"
+    #ref_bot = challenger_bots.pop()
+    ref_bot = "Omega"
     """
 
     bots = challenger_bots + [ref_bot]
