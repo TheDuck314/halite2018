@@ -30,12 +30,25 @@ but in a re-test:
  Phi    2p:  216-193    4p:   0- 0- 0- 0
 
 
+recent reasons for 2p losses:
+in a fight over a big collision halite patch, teccles mines a bunch
+teccles builds a closer dropoff and gets to mining faster
+teccles just outmines me before the first dropoff
+my "dropped" is still always much higher, probably bad
+
+HERES A PROBLEM: IF A LOW HALITE ENEMIES MOVES ONTO A BIG PATCH OF HALITE, THEN I WONT CONSIDER RAMMING
+THEM B/C THEY HAVE SUCH LOW HALITE! 
+so maybe I need to add on a turn or two of mining their square to their halite
+
+
 DISABLE CAUTIOUSNESS EXPLOITATION IN PSI AND OMEGA
 
 my current 4p consider_fleeing code often has me fleeing directly onto the enemy, which doesn't seem great
 
 occasionally some of my ships don't get back to base. consider starting the back-to-base timer
 using bfs distance rather than literal distance
+
+better dropoff location by preferring proximity to existing ships, and maybe to shipyard so that new ships can get to the action faster
 
 
 let fleeing ships push others out of the way!! this will probably be super good, locally anyway

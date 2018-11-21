@@ -138,7 +138,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken11"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken12"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
