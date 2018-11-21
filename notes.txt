@@ -23,9 +23,12 @@ but in a re-test:
  Phi    2p:  216-193    4p:   0- 0- 0- 0
 
 
-BACKPORT THE OMEGA FIX TO PSI
-
 DISABLE CAUTIOUSNESS EXPLOITATION IN PSI AND OMEGA
+
+my current 4p consider_fleeing code often has me fleeing directly onto the enemy, which doesn't seem great
+
+occasionally some of my ships don't get back to base. consider starting the back-to-base timer
+using bfs distance rather than literal distance
 
 
 let fleeing ships push others out of the way!! this will probably be super good, locally anyway
@@ -37,15 +40,7 @@ also, he seems quite reckless with low-halite ships
 it's hard to see how ramming a 600 with a 50 could turn out badly, on average
 
 
-Rachol and teccles both have evasion in 4p see https://halite.io/play/?game_id=1993792 where teccles often moves to evade mlomb (who rams me a lot)
-
 predict movement of returners and use it for safety?
-
-let's do something like: if a guy's a known rammer, then it's unsafe to move next to one of his
-ships with < 500 halite if we have more halite than that ship, and also we should flee if we find
-ourself in that situation. maybe?
-
-there's some bug where we don't always flee someone who tried to ram us last turn.
 
 
 
