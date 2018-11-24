@@ -1,0 +1,198 @@
+thoughts
+
+claim: given the sequence of squares visited on a mining route, the optimal pausing rule has the form
+"stop on a square until its halite is less than X" for some X.
+
+attempted proof: 
+imagine there's some X so that on one square A we remain on a turn when that square's halite < X, and
+also there's another square B such that we move on from that square when that square's halite is still > X.
+Then imagine the same route except that we remain on square A one less turn, and remain on square B
+one more turn. Then 
+- total mining income will go up because we shifted a mining turn from a lower halite square to a higher halite square
+- how will total move costs change? the cost of moving on from square A will be higher, while the cost of moving
+  on from square B will be lower. which is more important?
+
+let's consider the following example:
+originally, we remained on square A when it had 119 halite, mining it down to 89, but we moved on from square B when it had 121 halite, after we had just mined it down from 162
+but we're going to switch to moving on from square A when it still has 159 halite, and mining B down to 91. The gain from
+mining is that we're mining an extra turn on B, getting 30 halite, and skipping a turn of mining on A, that gave us 30 halite. So that's
+a gain of zero since I chose the worst case here.
+Previously the move cost was 8 from A and 12 from B for a total of 20.
+Now it's going to be 15 from A and 9 from B, for a total of 24, which is actually worse.
+
+OK that makes me worry that I'm thinking about this wrong. Maybe I really should include costs in the plan.
+
+Let's suppose that there's some square that we currently move on from when its halite is down to A, and
+another square that we move on from when its halite is down to B. The total move cost is then 
+A/10 + B/10  
+(neglecting rounding)
+
+Now imagine we're going to move on from A one turn earlier, and stay on B one turn later. Neglecting rounding, this means
+we're giving up A/3 halite that we previously mined from A, and gaining B/4 extra halite that we will now mine from B.
+Also, our new move-on cost from A is (4A/3)/10 = 4A/30, and our new move-on cost from B is (3B/4)/10 = 3B/40
+
+So the total change in our halite from the switch is
+-A/3 + B/4 + A/10 + B/10 - 4A/30 - 3B/40
+
+= A(-1/3 + 1/10 - 4/30) + B(1/4 + 1/10 - 3/40)
+= A(-40 + 12 - 16)/120 + B(30 + 12 - 9)/120
+= A(-44/120) + B(33/120)
+
+= (-44 A + 33 B)/120
+
+= (-4 A + 3 B) * 11/120
+
+So we gain by switching if
+
+-4 A + 3 B > 0
+B > 4/3 A
+
+I think this supports my original phrasing. Pre-switching, square had halite (4/3)A. We stayed on it
+even though there was another square that we were going to move on from even though it had B,
+with B > (4/3)A.
+
+
+So, given some number of "pausing squares", how should we find the optimal pausing rule?
+
+We can pick an X, and then simulate what would happen if we used that X. If we also tell the
+simulation that it has to pause for a turn if it doesn't have enough halite to move, then this
+will be an accurate simulation of how long the path will take for that X, and it'll end at the
+dropoff in some # of turns with some amount of halite. Then we just need an evaluation function
+that just takes time of delivery and halite delivered and we're golden. We can search for the
+optimal value of X; there's probably some fancy heuristic way to guess a reasonable X and then
+search around it.
+
+So to evaluate a proposed list of pausing squares, we run simulations for a few
+X's and find the best possible evaluation score, and make that the score of the
+path. Hopefully this is reasonably cheap.
+
+
+The hard part is searching over paths.
+
+One way to get a few reasonable paths is to sequentially run our heuristic for best-mining square.
+that is we can try the paths
+[best mining square]
+[best mining square, best mining square evaluated by starting at that square]
+[best mining square, best mining square evaluated by starting at that square, ...]
+
+Actually a problem with that is that our best-mining-square heuristic uses our
+current ship halite, and we don't actually know what it'll be after visiting
+the first square. We could make a guess like (current halite + 1000)/2 though.
+
+Maybe another way of thinking about it: we can start with the single simple path
+[best mining square]
+
+and then try to find some plausible mutations and hill climb.
+
+Obviously one mutation has to be "insert a new square at the beginning, at the
+end, or between two squares"
+
+We can have some new-square-proposer function that looks similar to our current
+square evaluation formula, and pick new squares deterministically or randomly
+based on the formula. 
+
+To guide the development of the square-proposer, we could actually just try all
+the possible new squares and look at their scores, and try to abstract some
+heuristic.
+
+Actually I wonder how crazy it is to just propose all squares (within some
+radius?) and pick the best (if the resulting path is better than the current
+one).
+
+OK, I'm optimistic about being able to implement a good add-new-square mutation.
+
+A super easy mutation is delete-a-square; we can just try each one.
+
+If we have a square-proposer, it's probably easy to implement a shift-a-square
+mutation.  Just pretend you deleted it and now have to propose a new square to
+go in its spot.
+
+In principle it's possible to get to any path by using these mutations, but it
+might be that we need more or we'll get stuck in local minima.
+
+A reasonable mutation is "swap two squares". depending on how many squares are in
+your path it's easy to just try all possible swaps. Alternatively, you could have
+a heuristic for which swaps are worth trying, like "swap if it will decrease total
+distance traveled", which is easy to compute.
+
+
+So from low-level to high-level, here are the needed components
+
+- an evaluation function gives you a score if you tell it "I will deliver H halite after T turns"
+- a function that takes a set of pause squares and a halite limit X that tells you how low to mine
+  each square before moving on, and returns the time taken to complete the path and the total
+  halite you'll have at the end.
+- a function that takes a set of pause squares and finds the best possible score for those pause
+  squares by optimizing over X.
+- a few mutation functions that take a path and generate plausible new paths to try
+- a path optimizer that starts from just a Ship and returns the best possible path for it.
+
+
+
+Let's try to sketch out a hill climbing function at a very high level
+
+
+Let's have a set of seed paths (maybe just one path).
+
+A round of the hill climb could consist of: generate some new paths from the seed paths, score them, drop some bad paths.
+
+
+
+we can always have a special plan that is just "return to base via a low-halite route"
+and that can get scored against all the other possible plans
+
+maybe something to try is the old system, plus we simulate early ships' full mining runs
+and use that to update the effective_halite for later ships. Nontrivial but doable to make
+it work with the re-queueing system.
+
+
+
+
+another way of doing search:
+
+Each ship has five possible actions each turn: still,n,s,e,w.
+We can evaluate each by doing a rollout of our current mining policy after each action.
+Then just do the best action!
+
+This can be iterated: to evaluate north, consider each possible second move
+after north, do a rollout of each, take the best second move, use its score as
+north's score, etc. There is some pruning possible: I imagine it almost never
+makes sense to do north->south. By "score" here I'm basically imagining
+time-to-base in a rollout of the current policy.
+
+Also, it's possible to do rollouts under a variety of policies and take the
+best result as your score. For example, we can do rollouts with various
+min_halite_to_mine thresholds. Or we can always try a rollout of a special "go
+back to base" policy and use it as a lower bound for the value of its first
+recommended move.
+
+OK, so yet another way of approaching this would be to code up various
+policies, roll them all out, and choose the output of the best one.
+
+How do rollouts work exactly?
+
+We run the existing plan_mining function for one ship. It tells us either to
+stay still or move towards a target. We can just move there with a naive move
+function maybe?? And after moving, updating ship halite/local halite, we
+iterate.  Just like the current sim code but the tgt gets recalculated every
+turn (sounds expensive!)
+
+Maybe a benefit here: seems easy to scale this with time: just keep picking
+ships and trying new policies, and whenever you get a policy that works better
+than the previous one for that ship switch to that one.
+
+How do we deal with interactions between ships in these frameworks?
+
+So currently the way we deal with interactions between ships is:
+ - two ships are not allowed to choose the same next mining target
+ - resolve_plans_into_commands routes ships around each other as needed
+
+The problem with these searches that look farther into the future is that if
+we don't do something to prevent it, two different ships will plan to mine
+the same patch of halite at some point in the future, which is wrong and will
+cause us to make bad decisions.
+
+So imagine we roll out our *entire* mining policy for our whole fleet of ships.
+How hard is that? 
+
+
