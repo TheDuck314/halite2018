@@ -196,3 +196,79 @@ So imagine we roll out our *entire* mining policy for our whole fleet of ships.
 How hard is that? 
 
 
+
+
+
+Yet another approach.
+
+define a relatively cheap evaluation function, and just do basically tree
+search one ship at a time on the basic nsews moves to maximize the evaluation
+function.
+
+The evaluation function would be something like a halite NPV. We'd have a
+global interest rate.
+
+For one ship at a time this doesn't seem too crazy. plan_mining already has a
+ready-made evaluation function.
+
+But how well does this handle multiple ships? For example, how do we prevent
+two ships from implicitly planning to mine the same halite?
+
+
+
+Another approach
+
+keep basically the same target selection procedure, but in addition to
+selecting a target ships also select the move they're going to make this turn.
+They'll run the target-selection function on the board as it will be after the
+action. That is, we'll imagine "what target would we choose if we stay still, vs
+if we move left, vs if we move right, ...". also the target selection function
+naturally gives a completion time for each possibility which lets us rank them.
+Also, it lets us resolve conflicts between ships by choosing the resolution
+that minimizes the sum of completion times. The way we deal with multiship here
+is twofold: first we make sure to choose a set of moves that don't interfere with
+each other, and second we don't let ships both choose the same target.
+
+
+
+An obstacle: for search, it's crucial that our evaluation function have a property like:
+
+staying still on a dropoff, then moving onto a rich square must be worse than moving onto the rich square then staying still 
+
+Otherwise we'll delay moving onto the rich square and just stay on the dropoff.
+
+The reason that the current evaluation function has this problem is that mining
+the square for a turn reduces its halite significantly, which reduces our
+estimate of the rate at which we'll mine it, which significantly increases our
+estimated trip time.
+
+What about this way of estimating mining time: 
+Starting from o
+
+
+
+Not sure if this will help, but imagine this simplified scenario:
+
+1d, we're only allowed to move to the right, goal is to get 1000 halite
+AND THEN move to the right edge as quickly as possible.
+First, we know the time-to-win from each square if we've already gotten 1000 halite
+Then we should be able to work backwards to get time-to-win and optimal move
+which just depends on (x coordinate, halite left at this square, ship halite)
+annoyingly already this 1d no-backtracking problem has a 3d state space.
+
+
+
+
+IDEAS THAT MAYBE COULD BE IMPORTED INTO THE OLD ARCHITECTURE
+
+- when computing turns_to_fill_up in plan_mining be a bit smarter: account for nearby
+  halite richness if we know we won't fill up from the main target square
+
+- to discourage excessive clumping, once a ship has claimed a target decrease effective_halite
+  around that target if that target won't let the ship fill all the way up in one square
+
+- some sort of more sophisticated resolve_plans_into_commands that maximizes an overall objective
+  function of closeness?
+
+- if a ship is forced to route away from its chosen plan target, let it replan with some smarter
+  notion of distance? (seems hard)
