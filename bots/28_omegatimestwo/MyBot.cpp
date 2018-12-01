@@ -763,15 +763,15 @@ struct Bot {
             // can't build on top of enemy structures
             if (dist_to_enemy_structure(pos) == 0) continue;
 
-            // crude heuristic:
-            // don't build at a spot that's closer to an enemy structure than it
-            // is to any of our structures, unless there are no nearby enemy ships
-            // in a big radius        
-            if (DONT_BUILD_NEAR_ENEMY_STRUCTURES.get(true)) {
+            if (DONT_BUILD_NEAR_ENEMY_STRUCTURES.get(false)) {
+                // crude heuristic:
+                // don't build at a spot that's closer to an enemy structure than it
+                // is to any of our structures, unless there are no nearby enemy ships
+                // in a big radius        
                 if (dist_to_enemy_structure(pos) <= dist_to_structure(pos) && dist_to_enemy_ship(pos) < 20) continue;  // TUNE
             } else {
                 // much more relaxed condition:
-                if (dist_to_enemy_structure(pos) <= 2) continue;  // TUNE
+                if (dist_to_enemy_structure(pos) <= 4) continue;  // TUNE
             }
 
             // let's say there have to be 2 allied ships within 10
