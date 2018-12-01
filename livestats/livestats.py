@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
 import requests
 import pandas as pd
@@ -109,15 +109,19 @@ def show_stats(stats, title):
 
 show_stats(my_stats, "overall")
 
-for opp in ["TheDuck314", "teccles", "TonyK", "reCurs3", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
+for opp in ["TheDuck314", "teccles", "reCurs3", "TonyK", "Rachol", "zxqfl", "shummie", "ColinWHart", "Belonogov", "SiestaGuru", "ArtemisFowl17"]:
     if opp == my_username:
         continue
     show_stats(with_player(my_stats, opp), "Games including {}".format(opp))
 
-for opp in ["teccles", "TheDuck314"]:
+for opp in ["teccles", "TheDuck314", "reCurs3"]:
     if opp == my_username:
         continue
     show_stats(without_player(my_stats, opp), "Games **WITHOUT** {}".format(opp))
+
+
+for opp1, opp2 in [("teccles", "reCurs3")]:
+    show_stats(without_player(without_player(my_stats, opp1), opp2), "Games **WITHOUT** {} or {}".format(opp1, opp2))
 
 header("2p losses")
 tmp = my_stats[(my_stats.NumPlayers == 2) & (my_stats.MyRank == 2)][["MyRank","MapSize","Players","Winner","WinnerHalite","MyHalite","Replay"]].copy()

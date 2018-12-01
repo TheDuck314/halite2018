@@ -23,6 +23,10 @@ class PlayerAnalyzer final
     // their_ship into my_ship.
     static bool player_might_ram(int player_id, Ship my_ship, Ship their_ship);
 
+    // Returns true if we think this enemy ship is deliberately blocking the way to
+    // one of our strucutres.
+    static bool ship_is_structure_blocker(int player_id, Ship enemy_ship);
+
   private:
     static int get_num_collisions(int player_id);
 
@@ -50,6 +54,10 @@ class PlayerAnalyzer final
         vector<Ship> ships;  // the player's ships on the previousu turn
         vector<int> at_risk_sids;  // sids of this player that were adjacent to an "unsafe" square last turn
         set<int> rammer_sids;  // sids of this player that tried to ram last turn, but missed
+        // for each ship of this player, how many turns in a row it's been blocking one of our dropoffs
+        map<int, int> sid_to_consecutive_blocking_turns;
+        set<int> structure_blocker_sids;
+        
         PlayerStats stats;
 
         PlayerData() : unsafe_map(false), enemy_ship_map(false) {}

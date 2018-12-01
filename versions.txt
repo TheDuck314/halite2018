@@ -147,9 +147,14 @@ final rank=1 μ=97.85 σ=0.46 at 20181120 9:05pm
   fixing this seems like the right thing to do.
 
 v36 24_omegaplusone
+final rank=2 μ=97.07 σ=0.23
 - silly thing: we_win_fight_2p is much more pessimistic with distance 2 of an enemy structure
 - experimental: 2p: if you have >500 halite consider enemy ships impassable, and always consider enemy
   ships with less halite than you impassable. this is even, 152-160, against Omega; it's an attempt to
   lose less halite to teccles in 2p combat in live
+
+v37 28_omegatimestwo
+- MIN_DROPOFF_SEPARATION 17->9 2p:  52-58    4p:  79-49-53-50
+- initial pass at dealing with SiestaGuru's dropoff blocking behavior
 
 

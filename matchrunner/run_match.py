@@ -47,6 +47,7 @@ LOCAL_BOT_BINARIES = {
     "Psi":     "/home/greg/coding/halite/2018/repo/bots/22_psi/build/MyBot",
     "Omega":   "/home/greg/coding/halite/2018/repo/bots/23_omega/build/MyBot",
     "OmegaPlusOne":   "/home/greg/coding/halite/2018/repo/bots/24_omegaplusone/build/MyBot",
+    "OmegaTimesTwo":   "/home/greg/coding/halite/2018/repo/bots/28_omegatimestwo/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -90,6 +91,15 @@ def run_game(game_dir, seed, mapsize, bots, bot_to_command):
     # todo: on ec2, auto-rm log and hlt files
 
     results = json.loads(results_string)
+
+    # first check if anybody errored out. if so start screaming
+    #print results["terminated"]
+    for _, terminated in results["terminated"].iteritems():
+        if terminated:
+            while True:
+                print "GAME HAD A TERMINATION: {}".format(" ".join(command))
+                time.sleep(1)
+
     rank_to_bot = {}
     for player_id, stats in results["stats"].items():
         rank_to_bot[int(stats["rank"])] = bots[int(player_id)]
@@ -138,7 +148,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken12"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken16"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -300,12 +310,13 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["OmegaPlusOne"]
-    ref_bot = "Omega"
+    challenger_bots = ["OmegaTimesTwo"]
+    ref_bot = "OmegaPlusOne"
     """
-    challenger_base = "OmegaPlusOne"
-    param = "MAX_HALITE_TO_RAM_2P"
-    values = [0, 250, 500, 750, 1000]
+    challenger_base = "OmegaTimesTwo"
+    param = "MIN_DROPOFF_SEPARATION"
+#    values = [0, 5, 10, 30, 17]
+    values = [9, 17]
 #    values = [0.0]
     challenger_bots = []
     for val in values:
@@ -314,8 +325,8 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    #ref_bot = challenger_bots.pop()
-    ref_bot = "Omega"
+    ref_bot = challenger_bots.pop()
+    #ref_bot = "Omega"
     """
 
     bots = challenger_bots + [ref_bot]

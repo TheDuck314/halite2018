@@ -42,6 +42,7 @@ void PlayerAnalyzer::analyze()
         PosSet &unsafe_map = data.unsafe_map;
         PosSet &enemy_ship_map = data.enemy_ship_map;
         set<int> &rammer_sids = data.rammer_sids;
+        map<int, int> &sid_to_consecutive_blocking_turns = data.sid_to_consecutive_blocking_turns;
         PlayerStats &stats = data.stats;
         const Player &player = Game::players[pid];
 
@@ -78,7 +79,7 @@ void PlayerAnalyzer::analyze()
             if (enemy_ship_map(s.pos)) {
                 stats.num_missed_rams += 1;
                 rammer_sids.insert(s.id);
-                Log::flog_color(s.pos, 0, 0, 255, "missed ram by player %d", pid);
+                //Log::flog_color(s.pos, 0, 0, 255, "missed ram by player %d", pid);
             }
         }
 
@@ -151,6 +152,51 @@ void PlayerAnalyzer::analyze()
                 }
             }
         }
+
+        /////////////////////////// LOOK FOR ENEMY BLOCKING BEHAVIOR //////////////////////////////
+        if (pid != Game::my_player_id) {
+            data.structure_blocker_sids.clear();
+
+            map<Vec, int> my_structure_to_num_blockers;
+            for (Vec v : Game::me->structures) my_structure_to_num_blockers[v] = 0;
+
+            for (Ship s : player.ships) {
+                // First count how many turns this ship has been hanging around one of our dropoffs
+                Vec my_structure = grid.closest(s.pos, Game::me->structures);
+                const bool blocking = (grid.dist(s.pos, my_structure) <= 3) && 
+                                      (grid.smallest_dist(s.pos, player.structures) > 3);
+                auto it = sid_to_consecutive_blocking_turns.find(s.id);
+                if (it == sid_to_consecutive_blocking_turns.end()) {
+                    sid_to_consecutive_blocking_turns[s.id] = (blocking ? 1 : 0);
+                } else {
+                    if (blocking) it->second += 1;
+                    else it->second = 0;
+                }
+                if (blocking) {
+                    Log::flog_color(s.pos, 0, 0, 255, "BLOCKER!");
+                }
+                Log::flog(s.pos, "sid_to_consecutive_blocking_turns[%d] = %d", s.id, sid_to_consecutive_blocking_turns[s.id]);
+
+                if (sid_to_consecutive_blocking_turns[s.id] > 20) {
+                    // this guy is a long-term blocker. add to the blocker count of my_structure
+                    my_structure_to_num_blockers[my_structure] += 1;
+                }
+            }
+
+            for (const pair<Vec, int> &struct_and_num_blockers : my_structure_to_num_blockers) {
+                const Vec my_structure = struct_and_num_blockers.first;
+                const int num_blockers = struct_and_num_blockers.second;
+                if (num_blockers < 2) continue;  // no real blocking problem
+
+                // Player pid is trying to block this structure. Designate all his nearby ships as blockers
+                for (Ship s : player.ships) {
+                    if (grid.dist(s.pos, my_structure) <= 4) {
+                        Log::flog_color(s.pos, 255, 0, 0, "REAL BAD BLOCKER!");
+                        data.structure_blocker_sids.insert(s.id);
+                    }
+                }
+            }
+        }
     }    
 }
 
@@ -194,4 +240,9 @@ bool PlayerAnalyzer::player_might_ram(int player_id, Ship my_ship, Ship their_sh
 
     // they totally are. let's impose some plausible conditions for when they might ram
     return (their_ship.halite < 500) && (my_ship.halite > their_ship.halite);
+}
+
+bool PlayerAnalyzer::ship_is_structure_blocker(int player_id, Ship enemy_ship)
+{
+    return pid_to_data.at(player_id).structure_blocker_sids.count(enemy_ship.id) > 0;
 }

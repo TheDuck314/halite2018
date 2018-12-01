@@ -31,17 +31,35 @@ but in a re-test:
 
 
 recent reasons for 2p losses:
-in a fight over a big collision halite patch, teccles mines a bunch
-teccles builds a closer dropoff and gets to mining faster
-teccles just outmines me before the first dropoff
-my "dropped" is still always much higher, probably bad
+- in a fight over a big collision halite patch, teccles mines a bunch
+- teccles builds a closer dropoff and gets to mining faster
+- reCurs3 builds a closer dropoff and gets to mining faster
+- giving inspiration to reCurs3 by pursing inspiration myself?
+- teccles just outmines me before the first dropoff
+- my "dropped" is still always much higher, probably bad
+
+reasons for 4p losses:
+- building a dropoff away from others and missing inspiration (also it was far so I lost time)
+- SiestaGuru block in 4p: https://halite.io/play/?game_id=2362565
+- abandoning a good dropoff position b/c someone else built nearby: https://halite.io/play/?game_id=2401476
+
+
+NEED TO BREAK SIESTAGURU BLOCK: https://halite.io/play/?game_id=2362565
+- idea: PlayerAnalyzer checks if a player is a "blocker", (maybe if they have at least N ships that near our dropoff for at least T turns?)
+  If a player is a blocker, make their ships passable within distance 3 of my dropoff under relatively lenient conditions
+
+NEED TO TRY ALLOWING/ENCOURAGING DROPOFFS NEAR ENEMY STRUCTURES, AT LEAST IN 4P
+
+
+
+interesting 7-ship dropoff by reCurs3: https://halite.io/play/?game_id=2417685
 
 HERES A PROBLEM: IF A LOW HALITE ENEMIES MOVES ONTO A BIG PATCH OF HALITE, THEN I WONT CONSIDER RAMMING
 THEM B/C THEY HAVE SUCH LOW HALITE! 
 so maybe I need to add on a turn or two of mining their square to their halite
 
+in 2p, maybe prioritize dropoffs closer to the "border" to take away halite from opponent
 
-DISABLE CAUTIOUSNESS EXPLOITATION IN PSI AND OMEGA
 
 my current 4p consider_fleeing code often has me fleeing directly onto the enemy, which doesn't seem great
 
