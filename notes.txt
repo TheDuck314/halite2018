@@ -4,18 +4,45 @@
 
 
 THE COLLAPSE BLOCKING IS PRETTY BUGGY! FIX THE TODOS
+ALSO, WE OFTEN GO RIGHT PAST THE GUY WERE TRYING TO BLOCK
+ALSO RELATEDLY WHEN WE TRY TO RAM WE'LL PROBABLY GIVE UP THE BLOCK
 
+NEED TO ACCOUNT FOR INSPIRATION IN DROPOFF PLACEMENT CHOICE
 
+TECCLES IS EXPLOITING MY LACK OF AGGRESSIVE MOVES IN 4P
+in general we need to study teccles's caution decisions
+
+REALLY NEED TO FIX THE THING WHERE WE WON'T RAM A LOW-HALITE ENEMY ON A HIGH-HALITE SQUARE. EXAMPLE: turn 370 ship 103 https://halite.io/play/?game_id=2599738 
+
+we should be more proactive about predicting the 2nd+ dropoff location and preferring to mine near there
+
+we should penalize dropoff locations that are far from any potential builder when we already have enough halite to build
+
+>> in 4p, we can try to assassinate ships of competitors in places where a non-competitor will pick up the halite
+
+in 2p, we should look at cases where many of our ships can be inspired by fewer enemy ships and vice versa
+
+check if we can use halite arriving on a dropoff this turn to spawn a ship
+
+there's got to be a way to make my movement when mining more efficient: currently my guys are
+pathing around each other all the time. when a ship finds that it's going to path of it its
+way, we should try to find a better solution: either it should wait if the guy in front is
+going to move or the guy in front should move or something
+
+should the move-on mult of 3 be different when the tgt square is far away? look at some examples
+should the move-on mult of 3 be different at different stages of the game?
+
+need to adopt anti-siesta-block code for his new endgame timing: https://halite.io/play/?game_id=2598446
+
+here's an instructive game: teccles gets rocked by me and recurse b/c we build dropoffs next to each other and
+get a ton of inspiration
 
 recent reasons for 2p losses:
-- in a fight over a big collision halite patch, teccles mines a bunch
-- teccles just outmines me before the first dropoff
-- my "dropped" is still always much higher, probably bad
+- against teccles: either making a bad dropoff far away, or not actually sending any ships to it b/c we're chasing inspiration: https://halite.io/play/?game_id=2598374
 
 reasons for 4p losses:
-- teccles gets amazing inspiration early on https://halite.io/play?game_id=2585042
-- letting my high halite ships get rammed too much by not learning fast enough who rams https://halite.io/play/?game_id=2589558
-- building a useless dropoff low halite 32x32 https://halite.io/play/?game_id=2589558
+- many awful dropoff decisions: https://halite.io/play/?game_id=2598294
+- useless dropoff in 32x32 4p? https://halite.io/play/?game_id=2598446
 
 
 
