@@ -98,7 +98,13 @@ def run_game(game_dir, seed, mapsize, bots, bot_to_command):
     for _, terminated in results["terminated"].iteritems():
         if terminated:
             while True:
-                print "GAME HAD A TERMINATION: {}".format(" ".join(command))
+                formatted_command_line = ""
+                for part in command:
+                    if " " in part:
+                        formatted_command_line += ' "' + part + '"'
+                    else:
+                        formatted_command_line += " " + part
+                print "GAME HAD A TERMINATION: {}".format(formatted_command_line)
                 time.sleep(1)
 
     rank_to_bot = {}
@@ -149,7 +155,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken20"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken21"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -311,16 +317,13 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
+    """
     challenger_bots = ["OmegaSquared"]
     ref_bot = "OmegaTimesTwo"
     """
     challenger_base = "OmegaSquared"
-    param = "DONT_BUILD_NEAR_ENEMY_SHIPYARDS"
-#    values = [0, 5, 10, 30, 17]
-#    values = [9, 17]
-#    values = [0.0]
-#    values = [5, 10, 20, 40]
-    values = [0, 1]
+    param = "MIN_ENEMY_HALITE_TO_RAM_4P"
+    values = [1000, 500, 250, 0]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -330,7 +333,6 @@ def main():
 
     #ref_bot = challenger_bots.pop()
     ref_bot = "OmegaTimesTwo"
-    """
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots

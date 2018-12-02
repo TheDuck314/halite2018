@@ -169,4 +169,6 @@ v39 also 29_omegasquared
   structures. This is an attempt to fix this unfortunate game: https://halite.io/play/?game_id=2586352
   Even in local testing
 
+v40 
+
 
