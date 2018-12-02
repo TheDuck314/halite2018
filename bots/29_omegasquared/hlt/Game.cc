@@ -6,6 +6,7 @@ vector<Player> Game::players;
 Player* Game::me;
 int Game::turn;
 vector<Vec> Game::enemy_structures;
+vector<Vec> Game::enemy_shipyards;
 vector<Ship> Game::enemy_ships;
 
 void Game::post_update()
@@ -23,5 +24,4 @@ void Game::post_update()
         if (p.id == my_player_id) continue;
         std::copy(p.ships.begin(), p.ships.end(), std::back_inserter(enemy_ships));
     }
-
 }

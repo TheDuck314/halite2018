@@ -149,7 +149,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken17"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken20"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -311,15 +311,15 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    """
     challenger_bots = ["OmegaSquared"]
     ref_bot = "OmegaTimesTwo"
     """
     challenger_base = "OmegaSquared"
-    param = "DONT_BUILD_NEAR_ENEMY_STRUCTURES"
+    param = "DONT_BUILD_NEAR_ENEMY_SHIPYARDS"
 #    values = [0, 5, 10, 30, 17]
 #    values = [9, 17]
 #    values = [0.0]
+#    values = [5, 10, 20, 40]
     values = [0, 1]
     challenger_bots = []
     for val in values:
@@ -328,8 +328,9 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    ref_bot = challenger_bots.pop()
-    #ref_bot = "Omega"
+    #ref_bot = challenger_bots.pop()
+    ref_bot = "OmegaTimesTwo"
+    """
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots

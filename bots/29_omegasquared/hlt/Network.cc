@@ -66,6 +66,11 @@ void Network::init()
         Game::players[player_id].id = player_id;
         Game::players[player_id].shipyard.x = values[1];
         Game::players[player_id].shipyard.y = values[2];
+
+        // populate Game::enemy_shipyards
+        if (player_id != Game::my_player_id) {
+            Game::enemy_shipyards.push_back(Game::players[player_id].shipyard);
+        }
     }
 
     //Log::log("Constants.MAX_TURNS = %d", Constants::MAX_TURNS);

@@ -16,6 +16,7 @@ class Game final {
     static int turn;
 
     static vector<Vec> enemy_structures;
+    static vector<Vec> enemy_shipyards;
     static vector<Ship> enemy_ships;
 
     // update auxiliary structures after basic info is initialized at the beginning of the turn

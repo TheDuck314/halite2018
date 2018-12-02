@@ -159,8 +159,14 @@ just played 11 games. rank=?? μ=100.90 σ=2.85
 - initial pass at dealing with SiestaGuru's dropoff blocking behavior
 
 v38 29_omegasquared
-REMEMBER TO REENABLE CAUTIOUSNESS EXPLOITATION
+final rank=2 μ=97.05 σ=0.90
 - instead of requiring new dropoffs to be closer to any allied structure than any enemy structure, just require (dist to enemy structure > 4)
   against 28_omegatimestwo: 2p:  58-43    4p:  60-52-43-35
+  NOTE: this change later got backported to 28_omegatimestwo, though 28_omegatimestwo did not use it live
+
+v39 also 29_omegasquared
+- tiny dumb thing: don't build dropoffs that are closer to an enemy SHIPYARD than they are to any of our existing
+  structures. This is an attempt to fix this unfortunate game: https://halite.io/play/?game_id=2586352
+  Even in local testing
 
 
