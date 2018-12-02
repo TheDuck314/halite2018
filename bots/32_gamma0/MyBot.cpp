@@ -63,9 +63,11 @@ struct Bot {
 
     // GLOBAL CONSTANTS
     const int TURNS_LEFT_TO_RETURN = 15;  // TUNE
+    const int return_halite_thresh;
 
     Bot(int argc, char **argv)
-      : ram_targets(false)
+      : ram_targets(false),
+        return_halite_thresh(RETURN_HALITE_THRESH.get(950))
     {}
 
     void plan(const Ship &ship, Vec tgt, Purpose purpose)
@@ -215,7 +217,7 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-                    if (false && enemy_is_cautious) {  // currently only ever true in 4p
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
@@ -279,7 +281,13 @@ struct Bot {
 
                     // don't ram when we have high halite
                     if (Game::num_players == 2) {
-                        if (enemy_ship.halite < my_ship.halite || my_ship.halite > MAX_HALITE_TO_RAM_2P.get(500)) {
+                        // don't ram if either
+                        // - we have more than 500 halite or
+                        // - we have more halite than the guy we would ram -- but add on half the halite on the square
+                        //   he's standing on so we don't let low halite enemies freely mine high-halite squares
+                        const int max_halite_to_ram = min(MAX_HALITE_TO_RAM_2P.get(500),
+                                                          enemy_ship.halite + (grid(enemy_ship.pos).halite / 2));  // TUNE?
+                        if (my_ship.halite > max_halite_to_ram) {
                             impassable(enemy_ship.pos) = true;
                         }
                     }
@@ -648,7 +656,7 @@ struct Bot {
             Ship ship = q.front();
             q.pop_front();
 
-            const double halite_needed = Constants::MAX_HALITE - ship.halite;
+            const double halite_needed = return_halite_thresh - ship.halite;
 
             //const int my_dist_from_base = sid_to_base_dist.at(ship.id);
 
@@ -891,7 +899,9 @@ struct Bot {
                 if (sid_to_impassable.at(my_ship.id)(enemy_ship.pos)) continue;  // if it's impassable, it's probably bad to ram on that square
                 if (!can_move(my_ship)) continue;
                 if (busy_ship_ids.count(my_ship.id)) continue;
-                if (my_ship.halite >= enemy_ship.halite) continue;  // TUNE. TODO: maybe relax this condition when we heavily outnumber?
+
+                const int max_halite_to_ram = enemy_ship.halite + (grid(enemy_ship.pos).halite / 2);  // TUNE?
+                if (my_ship.halite >= max_halite_to_ram) continue;  // TUNE. TODO: maybe relax this condition when we heavily outnumber?
 
                 if (my_ship.halite < best_rammer.halite) {
                     best_rammer = my_ship;
@@ -1292,7 +1302,7 @@ struct Bot {
                     returning = true;
                 }
             } else {  // this ship has not been returning
-                if (ship.halite >= RETURN_HALITE_THRESH.get(950)) {  // TUNE
+                if (ship.halite >= return_halite_thresh) {  // TUNE
                     returning_ship_ids.insert(ship.id);
                     returning = true;
                 } else {

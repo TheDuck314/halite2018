@@ -1,6 +1,10 @@
-                                              Epsilon_0    2p:  306-209    4p:  365-301-301-206
-                                            Omega^Omega    2p:  209-306    4p:  808-872-872-967
+Using return_halite_thresh (default 950) instead of MAX_HALITE in plan_mining
+                                                Gamma_0    2p:  133-123    4p:  135-151-118-99
+                                              Epsilon_0    2p:  123-133    4p:  368-352-385-404
 
+
+
+make returners flee?
 
 
 THE COLLAPSE BLOCKING IS PRETTY BUGGY! FIX THE TODOS
