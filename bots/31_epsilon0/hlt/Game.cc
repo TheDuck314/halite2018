@@ -8,6 +8,8 @@ int Game::turn;
 vector<Vec> Game::enemy_structures;
 vector<Vec> Game::enemy_shipyards;
 vector<Ship> Game::enemy_ships;
+map<int, Ship> Game::id_to_ship;
+map<int, int> Game::sid_to_pid;
 
 void Game::post_update()
 {
@@ -23,5 +25,15 @@ void Game::post_update()
     for (const Player &p : players) {
         if (p.id == my_player_id) continue;
         std::copy(p.ships.begin(), p.ships.end(), std::back_inserter(enemy_ships));
+    }
+
+    // populate id_to_ship and sid_to_pid
+    id_to_ship.clear();
+    sid_to_pid.clear();
+    for (const Player & p : players) {
+        for (Ship ship : p.ships) {
+            id_to_ship[ship.id] = ship;
+            sid_to_pid[ship.id] = p.id;
+        }
     }
 }

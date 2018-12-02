@@ -1,43 +1,29 @@
-             Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.02    2p:  105-93    4p:  120-126-104-92
-             Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.01    2p:  109-89    4p:  118-119-108-95
-            Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.005    2p:  103-95    4p:  115-110-124-91
-              Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.0    2p:  277-317    4p:  969-967-986-1044
+                                              Epsilon_0    2p:  306-209    4p:  365-301-301-206
+                                            Omega^Omega    2p:  209-306    4p:  808-872-872-967
+
+
+
+THE COLLAPSE BLOCKING IS PRETTY BUGGY! FIX THE TODOS
 
 
 
 recent reasons for 2p losses:
 - in a fight over a big collision halite patch, teccles mines a bunch
-- teccles builds a closer dropoff and gets to mining faster
-- reCurs3 builds a closer dropoff and gets to mining faster
-- giving inspiration to reCurs3 by pursing inspiration myself?
 - teccles just outmines me before the first dropoff
 - my "dropped" is still always much higher, probably bad
-- AGAINST MLOMB: MAYBE TRYING TO BUILD A DROPOFF IN AN AREA BLOCKED OFF BY ENEMY SHIPS? https://halite.io/play?game_id=2584018
-- AGAINST ADAM: all sorts of terrible dropoff decisions https://halite.io/play/?game_id=2587218
 
 reasons for 4p losses:
-- building a dropoff away from others and missing inspiration (also it was far so I lost time)
-- SiestaGuru block in 4p: https://halite.io/play/?game_id=2362565
-- abandoning a good dropoff position b/c someone else built nearby: https://halite.io/play/?game_id=2401476
-- reCurs3 builds a much earlier dropoff: https://halite.io/play/?game_id=2585283 -- probably good b/c there's little halite near the shipyard
 - teccles gets amazing inspiration early on https://halite.io/play?game_id=2585042
-- here's a pretty pure "I build a dropoff far away, so lose" game against teccles: https://halite.io/play/?game_id=2585581
-  another one https://halite.io/play/?game_id=2589797
 - letting my high halite ships get rammed too much by not learning fast enough who rams https://halite.io/play/?game_id=2589558
 - building a useless dropoff low halite 32x32 https://halite.io/play/?game_id=2589558
 
 
-CONSIDER NOT RAMMING LOW HALITE ENEMIES IN 4P
 
-NEED TO BREAK SIESTAGURU BLOCK: https://halite.io/play/?game_id=2362565
-- idea: PlayerAnalyzer checks if a player is a "blocker", (maybe if they have at least N ships that near our dropoff for at least T turns?)
-  If a player is a blocker, make their ships passable within distance 3 of my dropoff under relatively lenient conditions
-
-NEED TO TRY ALLOWING/ENCOURAGING DROPOFFS NEAR ENEMY STRUCTURES, AT LEAST IN 4P
-
-
+We should consider discounting full enemy ships in we_win_fight calculations
 
 interesting 7-ship dropoff by reCurs3: https://halite.io/play/?game_id=2417685
+
+consider if we can use ships that have already delivered their final load as blockers, instead of forcing them to sit on the dropoff
 
 HERES A PROBLEM: IF A LOW HALITE ENEMIES MOVES ONTO A BIG PATCH OF HALITE, THEN I WONT CONSIDER RAMMING
 THEM B/C THEY HAVE SUCH LOW HALITE! 

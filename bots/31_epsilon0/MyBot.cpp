@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <deque>
 #include <queue>
 #include <vector>
@@ -214,7 +215,7 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-                    if (false && enemy_is_cautious) {  // currently only ever true in 4p
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
@@ -235,7 +236,12 @@ struct Bot {
                         continue;
                     }
 
+                    const bool enemy_can_move = can_move(enemy_ship);
                     for (int d = 0; d < 5; ++d) {
+                        // if the enemy is unable to move we won't consider adjacent squares impassable
+                        // effect of adding this leans positive, but probably noise: 2p:  488-429    4p:  481-474-422-432
+                        if (!enemy_can_move && (Direction)d != Direction::Still) continue;
+
                         const Vec pos = grid.add(enemy_ship.pos, (Direction)d);
 
                         // If this is our structure don't avoid it just because there's an
@@ -317,7 +323,7 @@ struct Bot {
                     // there's an adjacent enemy. ram!!!
                     commands.push_back(Command::move(p.ship, grid.adj_dir(p.ship.pos, closest_enemy.pos)));
                 } else {
-                    // no adjacent ship. stay put
+                    // no adjacent enemy. stay put
                     commands.push_back(Command::move(p.ship, Direction::Still));
                 }
             } else if (grid.dist(p.ship.pos, structure) <= 1 && can_move(p.ship)) {
@@ -344,7 +350,7 @@ struct Bot {
         while (!q.empty()) {
             Plan p = q.front();
             q.pop_front();
-            //Log::flog(p.ship, "popped %s", +p.toString());
+//            Log::flog(p.ship.pos, "popped %s", +p.toString());
 
             // decide where this ship should move to act on its plan.
             // can only pick a move that doesn't interfere with an existing move
@@ -939,8 +945,8 @@ struct Bot {
                         if (!can_move(enemy_ship)) continue;  // can't ram if you can't move
                         if (grid.dist(enemy_ship.pos, ship.pos) == 1 &&
                             PlayerAnalyzer::player_might_ram(pid, ship, enemy_ship)) {
-                            Log::flog_color(ship.pos, 255, 125, 0, "IM GONNA GET RAMMED");
-                            Log::flog_color(enemy_ship.pos, 255, 0, 0, "THIS GUYS GONNA RAM ME");
+                            //Log::flog_color(ship.pos, 255, 125, 0, "IM GONNA GET RAMMED");
+                            //Log::flog_color(enemy_ship.pos, 255, 0, 0, "THIS GUYS GONNA RAM ME");
                             gonna_get_rammed = true;
                             break;
                         }
@@ -959,7 +965,7 @@ struct Bot {
 
             // TODO: DONT JUST FLEE IF ITS IMPASSABLE! WE SHOULD ACTUALLY BE OUTNUMBERED BEFORE WE FLEE!
             fleeing_ships.push_back(ship);
-            Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
+            //Log::flog_color(ship.pos, 255, 125, 0, "I'm scared!");
         }
 
         PosMap<int> dest_to_sid(-1);
@@ -1051,7 +1057,8 @@ struct Bot {
         }
     }
 
-    void consider_dropoff_blocking()
+    // Emulate SiestaGuru's dropoff block, for testing
+    void TEST_consider_dropoff_blocking()
     {
         if (!DO_DROPOFF_BLOCKING.get(false)) return;
 
@@ -1080,6 +1087,173 @@ struct Bot {
         } 
     }
 
+    bool ship_could_possibly_return(Ship ship, const Player &player)
+    {
+        return player.dist_from_structure(ship.pos) <= Game::turns_left() + 1;
+    }
+
+    Vec ideal_blocking_pos(Ship enemy_ship, Vec enemy_ship_dest)
+    {
+        const Direction best_enemy_dir = grid.approach_dirs(enemy_ship.pos, enemy_ship_dest)[0];
+        const Vec move_dest = grid.add(enemy_ship.pos, best_enemy_dir);
+        return move_dest;
+    }
+
+    void consider_blocking_final_collapse()
+    {
+        // currently only block the final collapse
+        if (Game::turns_left() > grid.width) return;
+        Log::log("consider_blocking_final_collapse start");
+
+        map<int, int> pid_to_profit_plus_carried;
+        for (const Player &player : Game::players) {
+            int profit_plus_carried = player.halite;
+            for (Ship ship : player.ships) {
+                if (ship_could_possibly_return(ship, player)) {
+                    profit_plus_carried += ship.halite;
+                } else {
+                    // highlight ships that can't possibly return
+                    Log::flog_color(ship.pos, 0, 0, 255, "CANT POSSIBLY RETURN");
+                }
+            }
+            pid_to_profit_plus_carried[player.id] = profit_plus_carried;
+            Log::flog(Game::me->shipyard, "profit_plus_carried of player %d = %d", player.id, profit_plus_carried);
+        }
+
+        // only bother blocking players with close halite totals to us (except always block in 2p)
+        set<int> pids_to_block;
+        for (int pid = 0; pid < Game::num_players; ++pid) {
+            if (pid == Game::my_player_id) continue;
+            const int halite_diff = abs(pid_to_profit_plus_carried[pid] - pid_to_profit_plus_carried[Game::my_player_id]);
+            if (Game::num_players == 2 || halite_diff < 5000) {
+                Log::flog(Game::me->shipyard, "will try to block player %d!", pid);
+                pids_to_block.insert(pid);
+            }
+        }
+
+        deque<Ship> eligible_blocker_q;
+
+        for (Ship ship : Game::me->ships) {
+            if (busy_ship_ids.count(ship.id)) continue;
+            const bool could_possibly_return = ship_could_possibly_return(ship, *Game::me);
+            if (ship.halite > 100 && could_possibly_return) continue;  // return that halite instead of blocking!
+            Log::flog_color(ship.pos, 250, 250, 0, "eligible to block!");
+            eligible_blocker_q.push_back(ship);
+        }
+
+        map<int, Ship> enemy_sid_to_blocker;
+
+        while (!eligible_blocker_q.empty()) {
+            const Ship ship = eligible_blocker_q.front();
+            eligible_blocker_q.pop_front();
+
+            const bool could_possibly_return = ship_could_possibly_return(ship, *Game::me);
+
+            // find the best ship to block
+            Ship ship_to_block;
+            // squelch some compiler complaints about using unitialized variables :(
+            ship_to_block.halite = 0;
+            ship_to_block.id = -1;
+            ship_to_block.pos = {-1, -1};
+            bool found_ship_to_block = false;
+            for (const Player &enemy : Game::players) {
+                if (enemy.id == Game::my_player_id) continue;
+                if (!pids_to_block.count(enemy.id)) continue;
+                for (Ship enemy_ship : enemy.ships) {
+                    // if we could still deliver our halite, only try to block people with signficantly more halite than us
+                    if (could_possibly_return && enemy_ship.halite <= ship.halite + 400) continue;
+
+                    // don't bother blocking this ship if we've already found a better one to block
+                    if (found_ship_to_block && ship_to_block.halite > enemy_ship.halite) continue;
+
+                    // if the enemy ship cannot possibly return, don't bother blocking it!
+                    if (!ship_could_possibly_return(enemy_ship, enemy)) continue;
+
+                    Vec enemy_ship_dest = grid.closest(enemy_ship.pos, enemy.structures);
+                    const int enemy_dist_from_dest = grid.dist(enemy_ship.pos, enemy_ship_dest);
+
+                    // only try to block when we're pretty sure the enemy must be heading back
+                    // TODO: reenable something like this
+                    //if (enemy_dist_from_dest < Game::turns_left() + 15) continue;  // TUNE
+                    //Log::flog(ship.pos, "block BBB enemy_ship = %s<br/>enemy_ship_dest = %s", +enemy_ship.toString(), +enemy_ship_dest.toString());
+                    
+                    // check if we could possibly block this enemy ship in principle
+                    // TODO: There's something missing here. Sometimes this will think we can
+                    // block when at best we can meet them at the dropoff
+                    const int my_dist_from_dest = grid.dist(ship.pos, enemy_ship_dest);
+                    if (enemy_dist_from_dest < my_dist_from_dest) continue;
+                    
+                    // for now let's also require the the enemy is closer to us than they are to
+                    // their dest.
+                    // TODO: try lifting this
+                    // TODO: this misses a case where we are "closer" to the enemy, but in the wrong
+                    // direction around the torus
+                    const int enemy_dist_from_me = grid.dist(ship.pos, enemy_ship.pos);
+                    if (enemy_dist_from_me > enemy_dist_from_dest) continue;
+
+                    // finally, check if another allied ship is already blocking this ship, and is better
+                    // placed to do so than we are
+                    auto it = enemy_sid_to_blocker.find(enemy_ship.id);
+                    if (it != enemy_sid_to_blocker.end()) {
+                        const Ship existing_blocker = it->second;
+                        const Vec block_pos = ideal_blocking_pos(enemy_ship, enemy_ship_dest);
+                        if (grid.dist(existing_blocker.pos, block_pos) <= grid.dist(ship.pos, block_pos)) {
+                            // the existing_blocker is at least as well positioned to block as we are,
+                            // so let this enemy_ship go
+                            continue;
+                        }
+                    }
+
+                    // this ship is blockable and has more halite than the current ship_to_block (if any)
+                    // make this ship our new ship_to_block
+                    ship_to_block = enemy_ship;
+                    found_ship_to_block = true;
+                }
+            }
+
+            if (found_ship_to_block) {
+                // if there was an existing blocker but we decided we were better positioned to block,
+                // then make the existing blocker re-choose a ship to block
+                auto it = enemy_sid_to_blocker.find(ship_to_block.id);
+                if (it != enemy_sid_to_blocker.end()) {
+                    const Ship existing_blocker = it->second;
+                    eligible_blocker_q.push_back(existing_blocker);
+                    Log::flog(existing_blocker.pos, "kicked off of block target by %d", ship.id);
+                }
+
+                // register ourselves as the blocker of this enemy ship
+                enemy_sid_to_blocker[ship_to_block.id] = ship;
+                Log::flog(ship.pos, "picking block target %d", ship_to_block.id);
+            }
+        }
+
+
+        // finally, go through enemy_sid_to_blocker and make our blocking plans
+        for (const pair<int, Ship> &enemy_sid_and_blocker : enemy_sid_to_blocker) {
+            const int enemy_sid = enemy_sid_and_blocker.first;
+            const Ship ship_to_block = Game::id_to_ship.at(enemy_sid);
+            const Ship blocker = enemy_sid_and_blocker.second;
+            
+            const int enemy_pid = Game::sid_to_pid.at(enemy_sid);
+            const Vec ship_to_block_dest = grid.closest(ship_to_block.pos, Game::players[enemy_pid].structures);
+            const Vec block_pos = ideal_blocking_pos(ship_to_block, ship_to_block_dest);
+
+            busy_ship_ids.insert(blocker.id);
+            plan(blocker, block_pos, Purpose::Mine);
+            // make some alterations to the impassability map
+            PosMap<bool> &impassable = sid_to_impassable.at(blocker.id);
+            impassable(block_pos) = false;  // PROBLEM: we might just ram a different enemy?
+            for (int d = 0; d < 4; ++d) {
+                const Vec adj = grid.add(block_pos, (Direction)d);
+                impassable(adj) = false;  // SAME PROBLEM EVEN WORSE
+            }
+            impassable(ship_to_block.pos) = false;  
+            Log::flog_color(blocker.pos, 0, 255, 0, "trying to block %d!", ship_to_block.id);
+            Log::flog_color(block_pos, 0, 50, 0, "block_pos of %d for blocking %d", blocker.id, ship_to_block.id);
+            Log::flog_color(ship_to_block.pos, 255, 0, 0, "%d is trying to block this ship", blocker.id);
+        }
+    }
+
     vector<Command> turn()
     {
         plans.clear();
@@ -1096,7 +1270,9 @@ struct Bot {
 
         consider_ramming(commands);
 
-        consider_dropoff_blocking();
+        //TEST_consider_dropoff_blocking();
+
+        consider_blocking_final_collapse();
 
         consider_fleeing();    
 

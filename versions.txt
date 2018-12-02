@@ -176,5 +176,10 @@ v40 30_powomegaomega
 - in dropoff scoring, replace multiplier of (1 - 0.01 * dist_to_structure) with exp(-0.02 * mean_dist_to_my_ships) 
   Against 29_omegasquared: 2p:  93-70    4p:  127-86-66-61
 
-
+v41 31_epsilon0
+final rank=2 μ=99.00 σ=0.70
+- don't set squares adjacent to enemy impassable if enemy can't move:
+  against 30_powomegaomega: 2p:  488-429    4p:  481-474-422-432
+- rudimentary blocking of enemies' final collapse. In 4p we block enemies within 5k profit+carried of us; in 2p we always block.
+  All together, including the enemy-can-move change, against powomegaomega: 2p:  306-209    4p:  365-301-301-206
 

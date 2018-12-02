@@ -19,6 +19,9 @@ class Game final {
     static vector<Vec> enemy_shipyards;
     static vector<Ship> enemy_ships;
 
+    static map<int, Ship> id_to_ship;
+    static map<int, int> sid_to_pid;
+
     // update auxiliary structures after basic info is initialized at the beginning of the turn
     // must be called after Player::post_update() is called on all players
     static void post_update();
