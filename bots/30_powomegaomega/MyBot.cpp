@@ -214,7 +214,7 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-                    if (enemy_is_cautious) {  // currently only ever true in 4p
+                    if (false && enemy_is_cautious) {  // currently only ever true in 4p
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
