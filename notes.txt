@@ -1,33 +1,8 @@
-                    OmegaPlusOne.MAX_HALITE_TO_RAM_2P=0    2p:  58-91    4p:   0- 0- 0- 0
-                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=250    2p:  78-72    4p:   0- 0- 0- 0
-                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=500    2p:  82-69    4p:   0- 0- 0- 0
-                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=750    2p:  80-69    4p:   0- 0- 0- 0
-                  OmegaPlusOne.MAX_HALITE_TO_RAM_2P=999    2p:  83-66    4p:   0- 0- 0- 0
-                 OmegaPlusOne.MAX_HALITE_TO_RAM_2P=1000    2p:  367-381    4p:   0- 0- 0- 0
+             Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.02    2p:  105-93    4p:  120-126-104-92
+             Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.01    2p:  109-89    4p:  118-119-108-95
+            Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.005    2p:  103-95    4p:  115-110-124-91
+              Omega^Omega.DROPOFF_SHIP_DIST_PENALTY=0.0    2p:  277-317    4p:  969-967-986-1044
 
-
-                        Psi.MINING_NPV_FUDGE_FACTOR=1.0    2p:  133-86    4p:  133-96-113-93
-                        Psi.MINING_NPV_FUDGE_FACTOR=0.0    2p:  86-133    4p:  302-339-322-342
-but in a re-test:
-                                                    Psi    2p:  188-153    4p:  168-167-135-154
-                                                    Chi    2p:  153-188    4p:  456-457-489-470
-
-
-
-                             Phi.MAX_HALITE_TO_RAM_2P=0    2p:  13-68    4p:   0- 0- 0- 0
-                           Phi.MAX_HALITE_TO_RAM_2P=200    2p:  36-46    4p:   0- 0- 0- 0
-                           Phi.MAX_HALITE_TO_RAM_2P=400    2p:  44-40    4p:   0- 0- 0- 0
-                           Phi.MAX_HALITE_TO_RAM_2P=600    2p:  42-41    4p:   0- 0- 0- 0
-                           Phi.MAX_HALITE_TO_RAM_2P=800    2p:  40-44    4p:   0- 0- 0- 0
-                          Phi.MAX_HALITE_TO_RAM_2P=1000    2p:  239-175    4p:   0- 0- 0- 0
-
-
-        for (int d : {8, 10, 12}) {
-            const int diff_d = num_allies_within[d] - num_enemies_within[d];
-            if (diff_d != 0) return diff_d > 0;
-        }
-        return true;
- Phi    2p:  216-193    4p:   0- 0- 0- 0
 
 
 recent reasons for 2p losses:
@@ -47,6 +22,9 @@ reasons for 4p losses:
 - reCurs3 builds a much earlier dropoff: https://halite.io/play/?game_id=2585283 -- probably good b/c there's little halite near the shipyard
 - teccles gets amazing inspiration early on https://halite.io/play?game_id=2585042
 - here's a pretty pure "I build a dropoff far away, so lose" game against teccles: https://halite.io/play/?game_id=2585581
+  another one https://halite.io/play/?game_id=2589797
+- letting my high halite ships get rammed too much by not learning fast enough who rams https://halite.io/play/?game_id=2589558
+- building a useless dropoff low halite 32x32 https://halite.io/play/?game_id=2589558
 
 
 CONSIDER NOT RAMMING LOW HALITE ENEMIES IN 4P

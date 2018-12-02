@@ -165,10 +165,16 @@ final rank=2 μ=97.05 σ=0.90
   NOTE: this change later got backported to 28_omegatimestwo, though 28_omegatimestwo did not use it live
 
 v39 also 29_omegasquared
+final rank=2 μ=97.64 σ=0.73
 - tiny dumb thing: don't build dropoffs that are closer to an enemy SHIPYARD than they are to any of our existing
   structures. This is an attempt to fix this unfortunate game: https://halite.io/play/?game_id=2586352
   Even in local testing
 
-v40 
+v40 30_powomegaomega
+- some performance optimizations that hopefully don't change any behavior
+- in 4p, enemies with <300 halite are impassable (no improvement locally but seems intuitively good)
+- in dropoff scoring, replace multiplier of (1 - 0.01 * dist_to_structure) with exp(-0.02 * mean_dist_to_my_ships) 
+  Against 29_omegasquared: 2p:  93-70    4p:  127-86-66-61
+
 
 

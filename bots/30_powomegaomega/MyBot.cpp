@@ -32,6 +32,7 @@ PARAM(double, DROPOFF_ENEMY_BASE_DIST_BONUS_MAX);
 PARAM(double, DROPOFF_ENEMY_BASE_DIST_BONUS_FALLOFF_PER_DIST);
 PARAM(double, RETURN_TARGET_DIST_PENALTY);
 PARAM(double, MIN_ENEMY_HALITE_TO_RAM_4P);
+PARAM(double, DROPOFF_SHIP_DIST_PENALTY);
 PARAM(int, MIN_DROPOFF_SEPARATION);
 PARAM(int, MAX_TURNS_LEFT_TO_RAM_4P);
 PARAM(int, FIGHT_COUNT_RADIUS_2P);
@@ -126,7 +127,7 @@ struct Bot {
             while (dist <= max_R) num_enemies_within[dist++] += 1;
         }
 
-        bool exclude_returners = grid.smallest_dist(pos, Game::me->structures) > 8;  // TUNE
+        bool exclude_returners = Game::me->dist_from_structure(pos) > 8;  // TUNE
         vector<int> num_allies_within(max_R+1, 0);
         for (Ship ally : Game::me->ships) {
             if (exclude_returners && returning_ship_ids.count(ally.id)) continue;
@@ -182,10 +183,26 @@ struct Bot {
         const int num_nearby_enemies = grid.num_within_dist(enemy_ship.pos, enemy.ships, R);
         impassable(enemy_ship.pos) = (num_nearby_enemies > num_nearby_allies);
     }
+    
+    template<typename T>
+    struct Memo
+    {
+        bool computed = false;
+        T value;
+
+        void set(T _value)
+        {
+            value = _value;
+            computed = true;
+        }
+    };
 
     void set_impassable()
     {
         sid_to_impassable.clear();
+
+        PosMap<Memo<bool>> we_win_fight_4p_cache{Memo<bool>()};
+
         for (Ship my_ship : Game::me->ships) {
             PosSet &impassable = sid_to_impassable.emplace(my_ship.id, PosSet(false)).first->second;
 
@@ -197,12 +214,12 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-                    if (false && enemy_is_cautious) {  // currently only ever true in 4p
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
                         // in those special situations who knows what crazy stuff they might do).
-                        const int dist_from_enemy_base = grid.smallest_dist(enemy_ship.pos, enemy.structures);
+                        const int dist_from_enemy_base = enemy.dist_from_structure(enemy_ship.pos);
                         const int dist_from_me = grid.smallest_dist(enemy_ship.pos, Game::me->ships);
                         if (dist_from_enemy_base > 2 && dist_from_me > 1) {
                             // set the enemy ship itself as impassable, but not the adjacent squares
@@ -232,8 +249,11 @@ struct Bot {
                             impassable(pos) |= !we_win_fight_2p(pos, higher_caution);
     //                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
     //                        else Log::flog_color(pos, 0, 125, 0, "passable");
-                        } else {  // 4-player games                            
-                            impassable(pos) |= !we_win_fight_4p(pos);
+                        } else {  // 4-player games
+                            // messy memoization for speed :(
+                            Memo<bool> &memo = we_win_fight_4p_cache(pos);
+                            if (!memo.computed) memo.set(we_win_fight_4p(pos));
+                            impassable(pos) |= !memo.value;  // == !we_win_fight_4p(pos)
                         }
                     }
 
@@ -260,10 +280,10 @@ struct Bot {
 
                     // in 4p, don't ram enemies with too little halite.
                     // there's no evidence that this is actually good
-                    /*if (Game::num_players != 2 && enemy_ship.halite < MIN_ENEMY_HALITE_TO_RAM_4P.get(250)) {
+                    if (Game::num_players != 2 && enemy_ship.halite < MIN_ENEMY_HALITE_TO_RAM_4P.get(300)) {
                         impassable(enemy_ship.pos) = true;
-                    }*/
-                }
+                    }
+                } // end loop over enemy ships
 
                 // Consider enemy structures impassable if there is an adjacent ship of that player, 
                 // because there's a good chance that ship will hit us if we move onto the structure.
@@ -513,7 +533,7 @@ struct Bot {
             Log::flog(Game::me->shipyard, "initial halite_needed_for_dropoff = %f", halite_needed_for_dropoff);
             vector<pair<int, Ship>> dist_and_ships;
             for (Ship r : returners) {
-                dist_and_ships.push_back({grid.smallest_dist(r.pos, Game::me->structures), r});
+                dist_and_ships.push_back({Game::me->dist_from_structure(r.pos), r});
             }
             sort(dist_and_ships.begin(), dist_and_ships.end(), [](auto a, auto b) { return a.first < b.first; });
             for (auto dist_and_ship : dist_and_ships) {
@@ -528,7 +548,7 @@ struct Bot {
         for (Ship ship : returners) {
             bool must_go_to_real_structure = sids_that_must_go_to_real_structure.count(ship.id) > 0;
 
-            Log::flog(ship, "return dests:");
+            Log::flog(ship.pos, "return dests:");
             double best_score = -1e99;
             Vec best_tgt;
             for (pair<Vec, double> ts : target_scores) {
@@ -536,13 +556,13 @@ struct Bot {
                 if (want_dropoff && must_go_to_real_structure && target == planned_dropoff_pos) continue;
                 const double target_score = ts.second;
                 double score = target_score - RETURN_TARGET_DIST_PENALTY.get(30.0) * grid.dist(ship.pos, target); // TUNE
-                Log::flog(ship, "%s: %f", +target.toString(), score);
+                Log::flog(ship.pos, "%s: %f", +target.toString(), score);
                 if (score > best_score) {
                     best_score = score;
                     best_tgt = target;
                 }
             }
-            Log::flog(ship, "best return dest is %s", +best_tgt.toString());
+            Log::flog(ship.pos, "best return dest is %s", +best_tgt.toString());
 
             const int halite_room = Constants::MAX_HALITE - ship.halite;
             const int halite_here = grid(ship.pos).halite;
@@ -635,7 +655,7 @@ struct Bot {
                 if (impassable(pos)) continue;
                 double halite = effective_halite(pos);
                 if (halite <= 0) continue;
-                if (ram_targets(pos) && DONT_MINE_RAM_TARGETS.get(false)) continue;
+                //if (ram_targets(pos) && DONT_MINE_RAM_TARGETS.get(false)) continue;
 
                 const int dist_from_me = grid.dist(pos, ship.pos);
 
@@ -652,7 +672,7 @@ struct Bot {
                 }
 
                 // TODO: consider distance to all our structures, and the relative richness of the area around each structure
-                int dist_from_base = grid.smallest_dist(pos, Game::me->structures);
+                int dist_from_base = Game::me->dist_from_structure(pos);
                 if (want_dropoff) dist_from_base = min(dist_from_base, grid.dist(pos, planned_dropoff_pos));
 
                 // silly late-game thing: don't choose a target if by the time we get there
@@ -736,15 +756,10 @@ struct Bot {
             return;
         }
 
-        // maybe this should be a global computed at the start of the turn
-        PosMap<int> dist_to_allied_structure(0);
-        for (Vec pos : grid.positions) {
-            dist_to_allied_structure(pos) = grid.smallest_dist(pos, Game::me->structures);
-        }
-
         Vec best_pos;
         int best_score = -999999;
         for (Vec pos : grid.positions) {
+            const int dist_to_allied_structure = Game::me->dist_from_structure(pos);
             const int dist_to_enemy_structure =  grid.smallest_dist(pos, Game::enemy_structures);
             const int dist_to_enemy_ship = grid.smallest_dist(pos, Game::enemy_ships);
             const int dist_to_enemy_shipyard = grid.smallest_dist(pos, Game::enemy_shipyards);
@@ -754,7 +769,7 @@ struct Bot {
             if (dist_to_enemy_ship <= 1 && grid.smallest_dist(pos, Game::me->ships) > 0) continue;
 
             // don't build structures too close together
-            if (dist_to_allied_structure(pos) < MIN_DROPOFF_SEPARATION.get(9)) continue;  // TUNE
+            if (dist_to_allied_structure < MIN_DROPOFF_SEPARATION.get(9)) continue;  // TUNE
 
             // can't build on top of enemy structures
             if (dist_to_enemy_structure <= 2) continue;
@@ -764,7 +779,7 @@ struct Bot {
                 // don't build at a spot that's closer to an enemy structure than it
                 // is to any of our structures, unless there are no nearby enemy ships
                 // in a big radius        
-                if (dist_to_enemy_structure <= dist_to_allied_structure(pos) && dist_to_enemy_ship < 20) continue;  // TUNE
+                if (dist_to_enemy_structure <= dist_to_allied_structure && dist_to_enemy_ship < 20) continue;  // TUNE
             } else {
                 // much more relaxed condition:
                 if (dist_to_enemy_structure <= 4) continue;  // TUNE
@@ -773,7 +788,7 @@ struct Bot {
             if (DONT_BUILD_NEAR_ENEMY_SHIPYARDS.get(true)) {
                 // don't build at a spot that's closer to an enemy SHIPYARD than it is to
                 // any of our structures.
-                if (dist_to_enemy_shipyard < dist_to_allied_structure(pos)) {
+                if (dist_to_enemy_shipyard < dist_to_allied_structure) {
                     continue;  // TUNE?
                 }
             }
@@ -789,7 +804,7 @@ struct Bot {
             for (int dy = -radius; dy <= radius; ++dy) {
                 for (int dx = -radius; dx <= radius; ++dx) {
                     Vec v = grid.add(pos, dx, dy);
-                    if (grid.dist(pos, v) < dist_to_allied_structure(v)) {
+                    if (grid.dist(pos, v) < Game::me->dist_from_structure(v)) {
                         new_halite_in_radius += grid(v).halite;
                     } else {
                         old_halite_in_radius += grid(v).halite;
@@ -802,24 +817,13 @@ struct Bot {
                 continue;
             }
 
-            double dist_from_base = grid.smallest_dist(pos, Game::me->structures);
-            double dist_factor = 1.0 - DROPOFF_PENALTY_FRAC_PER_DIST.get(0.01) * dist_from_base;  // TUNE
+            const double avg_ship_dist = grid.average_dist(pos, Game::me->ships);
+            const double ship_dist_factor = exp(-DROPOFF_SHIP_DIST_PENALTY.get(0.02) * avg_ship_dist);
 
-            double enemy_base_dist_factor = 1.0;
-            /*if (Game::num_players != 2) {
-                // Prefer to be nearer enemy structures so we're more likely to get inspired
-                const int enemy_base_dist = grid.smallest_dist(pos, Game::enemy_structures);
-                enemy_base_dist_factor = 1.0 + 
-                    (DROPOFF_ENEMY_BASE_DIST_BONUS_MAX.get(0.0) * 
-                     exp(-max(10, enemy_base_dist) * DROPOFF_ENEMY_BASE_DIST_BONUS_FALLOFF_PER_DIST.get(0.04)));
-                if (Game::turn < 200) {
-                    Log::flog(pos, "enemy_base_dist_factor = %f", enemy_base_dist_factor);
-                }
-            }*/
-
-            double score = new_halite_in_radius * dist_factor * enemy_base_dist_factor;
+            double score = new_halite_in_radius * ship_dist_factor;
             /*if (Game::turn < 200) {
                 Log::flog(pos, "score = %f", score);
+                Log::flog(pos, "ship_dist_factor = %f", ship_dist_factor);
             }*/
 
             if (score > best_score) {
@@ -984,7 +988,7 @@ struct Bot {
                     const int owner_sid = dest_to_sid(adj);
                     if (owner_sid == -1 || owner_sid == ship.id) score += 1000000;  // adj isn't taken by someone else -- that's good
                     if (!impassable(adj)) score += 10000;  // adj isn't impassable -- that's good
-                    score += 100 - grid.smallest_dist(adj, Game::me->structures);  // closer to a structure is better
+                    score += 100 - Game::me->dist_from_structure(adj);  // closer to a structure is better
                     Log::flog(ship.pos, "%s score %d", +desc((Direction)d), score);
 
                     // this location is better

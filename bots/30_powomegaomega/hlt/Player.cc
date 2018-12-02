@@ -2,11 +2,6 @@
 #include "StringUtil.h"
 #include "Util.h"
 
-string Ship::toString() const
-{
-    return stringf("Ship(id=%d pos=%s halite=%d)", id, pos.toString().c_str(), halite);
-}
-
 string Dropoff::toString() const
 {
     return stringf("Dropoff(id=%d pos=%s)", id, pos.toString().c_str());
@@ -22,11 +17,15 @@ void Player::post_update()
     // id_to_ship
     id_to_ship.clear();
     for (Ship ship : ships) id_to_ship[ship.id] = ship;
-}
 
-bool Player::has_structure_at(Vec pos) const
-{
-    return contains(structures, pos);
+    // structures last forever, so we never have to set anything to false:
+    for (Vec structure : structures) has_structure_at(structure) = true;
+
+    // in the unlikely event that we really needed to optimize this, we could
+    // only recompute it when the # of structures changes
+    for (Vec v : grid.positions) {
+        dist_from_structure(v) = grid.smallest_dist(v, structures);
+    }
 }
 
 string Player::toString() const

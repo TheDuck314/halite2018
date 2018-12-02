@@ -162,6 +162,15 @@ int Grid::num_within_dist(Vec src, const vector<Ship> &ships, int R) const
     return n;
 }
 
+double Grid::average_dist(Vec src, const vector<Ship> &ships) const
+{
+    int total_dist = 0;
+    for (Ship s : ships) {
+        total_dist += dist(src, s.pos);
+    }
+    return total_dist / (double) ships.size();
+}
+
 Vec Grid::add(Vec pos, Direction dir) const
 {
     switch (dir) {

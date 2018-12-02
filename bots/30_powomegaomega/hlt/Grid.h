@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "Geometry.h"
-#include "Player.h"
+#include "Ship.h"
 using namespace std;
 
 struct Cell
@@ -36,8 +36,9 @@ class Grid final
 
     int second_smallest_dist(Vec src, const vector<Ship> &ships) const;
 
-
     int num_within_dist(Vec src, const vector<Ship> &ships, int R) const;
+
+    double average_dist(Vec src, const vector<Ship> &ships) const;
 
     Vec add(Vec pos, Direction dir) const;
     Vec add(Vec pos, int dx, int dy) const;

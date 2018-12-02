@@ -7,7 +7,7 @@
 #include "Log.h"
 #include "Grid.h"
 
-static const char* NAME = "OmegaSquared";
+static const char* NAME = "Omega^Omega";
 
 static string read_line()
 {
@@ -65,6 +65,7 @@ void Network::init()
     // this lets us init the Grid
     values = read_ints();
     grid.resize(values[0], values[1]);
+    grid.inited = true;
 
     // Now that the Grid is inited we can actually construct our Player objects
     Game::players.resize(Game::num_players);
@@ -98,7 +99,6 @@ void Network::init()
             //Log::log("grid(%d, %d).halite = %d", x, y, grid(x, y).halite);
         }
     }
-    grid.inited = true;
     
     // That's all the initial info we get. Once we're done initializing the game expects us to respond with our name
     // TODO: could call a function to do some initial computation here.

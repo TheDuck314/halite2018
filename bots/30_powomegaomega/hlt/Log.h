@@ -3,7 +3,7 @@
 #include <fstream>
 #include <cstdarg>
 #include "StringUtil.h"
-#include "Player.h"
+#include "Geometry.h"
 using namespace std;
 
 class Log 
@@ -34,17 +34,12 @@ class Log
     }
 
     static void flog(Vec pos, const string& msg);
-    static void flog(Ship ship, const string& msg) { flog(ship.pos, msg); }
 
     template<typename Arg1, typename... argv>
     static void flog(Vec pos, const char* format, Arg1 arg1, argv... args)
     {
         const string msg = stringf(format, arg1, args...);
         flog(pos, msg);
-    }
-    template<typename Arg1, typename... argv>
-    static void flog(Ship ship, const char* format, Arg1 arg1, argv... args) {
-        flog(ship.pos, format, arg1, args...);
     }
 
     static void flog_color(Vec pos, int r, int g, int b, const string& msg);
@@ -54,20 +49,6 @@ class Log
         const string msg = stringf(format, arg1, args...);
         flog_color(pos, r, g, b, msg);
     }
-
-    /*
-    static void log(const char *fmt, va_list ap)
-    {
-        const string msg = stringf(fmt, ap);
-        log(msg);
-    }
-
-    static void die(const char *fmt, va_list ap)
-    {
-        log(fmt, ap);
-        exit(-1);
-    }
-    */
 
   private:
     static ofstream f_main;

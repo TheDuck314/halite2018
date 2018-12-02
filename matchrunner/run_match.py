@@ -49,6 +49,7 @@ LOCAL_BOT_BINARIES = {
     "OmegaPlusOne":   "/home/greg/coding/halite/2018/repo/bots/24_omegaplusone/build/MyBot",
     "OmegaTimesTwo":   "/home/greg/coding/halite/2018/repo/bots/28_omegatimestwo/build/MyBot",
     "OmegaSquared":   "/home/greg/coding/halite/2018/repo/bots/29_omegasquared/build/MyBot",
+    "Omega^Omega":   "/home/greg/coding/halite/2018/repo/bots/30_powomegaomega/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -155,7 +156,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken21"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken24"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -317,13 +318,12 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
+    challenger_bots = ["Omega^Omega"]
+    ref_bot = "OmegaSquared"
     """
-    challenger_bots = ["OmegaSquared"]
-    ref_bot = "OmegaTimesTwo"
-    """
-    challenger_base = "OmegaSquared"
-    param = "MIN_ENEMY_HALITE_TO_RAM_4P"
-    values = [1000, 500, 250, 0]
+    challenger_base = "Omega^Omega"
+    param = "DROPOFF_SHIP_DIST_PENALTY"
+    values = [0.03, 0.013, 0.02]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -331,8 +331,9 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    #ref_bot = challenger_bots.pop()
-    ref_bot = "OmegaTimesTwo"
+    ref_bot = challenger_bots.pop()
+    #ref_bot = "OmegaTimesTwo"
+    """
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots
@@ -363,7 +364,7 @@ def main():
     input_q = Queue()
     output_q = Queue()
     if on_ec2():
-        num_workers = 60
+        num_workers = 50
     else:
         num_workers = 3
     for _ in range(num_workers):
