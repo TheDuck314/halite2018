@@ -184,6 +184,7 @@ final rank=2 μ=99.00 σ=0.70
   All together, including the enemy-can-move change, against powomegaomega: 2p:  306-209    4p:  365-301-301-206
 
 v42 32_gamma0
+final rank=2 μ=97.56 σ=0.66
 - plan_mining knows we're going for 950 halite instead of 1000. Probably slightly better
 - 2p: instead of making enemies impassable and unrammable when their halite is less than ours, we add half the halite
   on the enemy's square to their halite so we can ram them when they're mining a good square. Didn't test this

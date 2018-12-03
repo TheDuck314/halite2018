@@ -1,0 +1,39 @@
+#include "Game.h"
+
+int Game::num_players;
+int Game::my_player_id;
+vector<Player> Game::players;
+Player* Game::me;
+int Game::turn;
+vector<Vec> Game::enemy_structures;
+vector<Vec> Game::enemy_shipyards;
+vector<Ship> Game::enemy_ships;
+map<int, Ship> Game::id_to_ship;
+map<int, int> Game::sid_to_pid;
+
+void Game::post_update()
+{
+    // populate enemy_structures
+    enemy_structures.clear();
+    for (const Player &p : players) {
+        if (p.id == my_player_id) continue;
+        std::copy(p.structures.begin(), p.structures.end(), std::back_inserter(enemy_structures));
+    }
+
+    // populate enemy_ships
+    enemy_ships.clear();
+    for (const Player &p : players) {
+        if (p.id == my_player_id) continue;
+        std::copy(p.ships.begin(), p.ships.end(), std::back_inserter(enemy_ships));
+    }
+
+    // populate id_to_ship and sid_to_pid
+    id_to_ship.clear();
+    sid_to_pid.clear();
+    for (const Player & p : players) {
+        for (Ship ship : p.ships) {
+            id_to_ship[ship.id] = ship;
+            sid_to_pid[ship.id] = p.id;
+        }
+    }
+}
