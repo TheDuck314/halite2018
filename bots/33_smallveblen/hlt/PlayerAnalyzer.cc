@@ -43,6 +43,7 @@ void PlayerAnalyzer::analyze()
         PosSet &enemy_ship_map = data.enemy_ship_map;
         set<int> &rammer_sids = data.rammer_sids;
         map<int, int> &sid_to_consecutive_blocking_turns = data.sid_to_consecutive_blocking_turns;
+        PosMap<int> &min_adjacent_enemy_ship_halite = data.min_adjacent_enemy_ship_halite;
         PlayerStats &stats = data.stats;
         const Player &player = Game::players[pid];
 
@@ -56,7 +57,7 @@ void PlayerAnalyzer::analyze()
                 const Vec pos = it->second.pos;
                 if (unsafe_map(pos)) {
                     stats.moved_to_unsafe_count += 1;
-                    //Log::flog_color(pos, 255, 0, 0, "MOVED ONTO UNSAFE SQUARE!");
+                    Log::flog_color(pos, 255, 255, 0, "MOVED ONTO UNSAFE SQUARE!");
                     //Log::flog(player.shipyard, "ship %d moved unsafely!", sid);
                 }
                 stats.at_risk_count += 1;
@@ -79,7 +80,20 @@ void PlayerAnalyzer::analyze()
             if (enemy_ship_map(s.pos)) {
                 stats.num_missed_rams += 1;
                 rammer_sids.insert(s.id);
-                //Log::flog_color(s.pos, 0, 0, 255, "missed ram by player %d", pid);
+                Log::flog_color(s.pos, 0, 0, 255, "missed ram by player %d", pid);
+            }
+        }
+
+        // count the number of ships of this player that moved onto a square adjacent to an enemy ship with
+        // less halite
+        for (Ship prev_ship : player_ships) {
+            auto it = player.id_to_ship.find(prev_ship.id);
+            if (it == player.id_to_ship.end()) continue;  // ship is gone, don't worry about it
+            const Ship now_ship = it->second;
+            if (prev_ship.pos == now_ship.pos) continue;  // ship didn't actually move
+            if (min_adjacent_enemy_ship_halite(now_ship.pos) < prev_ship.halite) {
+                Log::flog_color(now_ship.pos, 0, 255, 0, "MOVED NEXT TO LOWER HALITE SHIP (maesh=%d)", min_adjacent_enemy_ship_halite(now_ship.pos));
+                stats.moved_next_to_lower_halite_enemy_count += 1;
             }
         }
 
@@ -97,20 +111,28 @@ void PlayerAnalyzer::analyze()
         Log::flog(player.shipyard, "num_missed_rams = %d", stats.num_missed_rams);
         Log::flog(player.shipyard, "get_num_collisions() = %d", get_num_collisions(pid));
         Log::flog(player.shipyard, "num_times_rammed_my_still_ship = %d", stats.num_times_rammed_my_still_ship);
+        Log::flog(player.shipyard, "moved_next_to_lower_halite_enemy_count = %d", stats.moved_next_to_lower_halite_enemy_count);
 
         /////////////////////////// PREPARE THE DATA THAT WE WILL USE NEXT TURN //////////////////////////////
 
         // decide what squares are unsafe for this player to move onto this turn.
         // also, record which squares were occupied by enemy ships this turn
+        // also, populate max_adjacent_enemy_ship_halite
         unsafe_map.fill(false);
         enemy_ship_map.fill(false);
+        min_adjacent_enemy_ship_halite.fill(9999);
         for (int enemy_pid = 0; enemy_pid < Game::num_players; ++enemy_pid) {
             if (pid == enemy_pid) continue;
             for (Ship enemy_ship : Game::players[enemy_pid].ships) {
-                // set all adjacent squares unsafe
+                // set all adjacent squares unsafe, and update min_adjacent_enemy_ship_halite
+                const bool enemy_can_move = (grid(enemy_ship.pos).halite / 4) <= enemy_ship.halite;
                 for (int d = 0; d < 5; ++d) {
+                    if (!enemy_can_move && (Direction)d != Direction::Still) continue;
                     const Vec adj = grid.add(enemy_ship.pos, (Direction)d);
                     unsafe_map(adj) = true;
+                    if (grid(adj).halite >= grid(enemy_ship.pos).halite) {
+                        min_adjacent_enemy_ship_halite(adj) = min(min_adjacent_enemy_ship_halite(adj), enemy_ship.halite);
+                    }
                 }
                 enemy_ship_map(enemy_ship.pos) = true;
             }

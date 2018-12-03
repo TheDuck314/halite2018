@@ -34,6 +34,8 @@ PARAM(double, DROPOFF_ENEMY_BASE_DIST_BONUS_FALLOFF_PER_DIST);
 PARAM(double, RETURN_TARGET_DIST_PENALTY);
 PARAM(double, MIN_ENEMY_HALITE_TO_RAM_4P);
 PARAM(double, DROPOFF_SHIP_DIST_PENALTY);
+PARAM(double, DROPOFF_ENEMY_DIST_PENALTY);
+PARAM(double, MINING_RETURN_RICHNESS_BONUS_MULT);
 PARAM(int, MIN_DROPOFF_SEPARATION);
 PARAM(int, MAX_TURNS_LEFT_TO_RAM_4P);
 PARAM(int, FIGHT_COUNT_RADIUS_2P);
@@ -116,9 +118,12 @@ struct Bot {
     bool can_afford_a_ship()
     {
         int min_halite_to_spawn = Constants::SHIP_COST;
+
+        // if we want to build a dropoff but we didn't manage to do it this turn, then
+        // only build a ship if we'll have enough halite left after building the ship
+        // to also build a dropoff
         if (want_dropoff) min_halite_to_spawn += Constants::DROPOFF_COST;
         return Game::me->halite >= min_halite_to_spawn;
-
     }
 
     bool we_win_fight_2p(Vec pos, bool higher_caution)
@@ -206,6 +211,9 @@ struct Bot {
 
         PosMap<Memo<bool>> we_win_fight_4p_cache{Memo<bool>()};
 
+        PosMap<int> allied_ship_id_at(-1);
+        for (Ship s : Game::me->ships) allied_ship_id_at(s.pos) = s.id;
+
         for (Ship my_ship : Game::me->ships) {
             PosSet &impassable = sid_to_impassable.emplace(my_ship.id, PosSet(false)).first->second;
 
@@ -217,7 +225,7 @@ struct Bot {
                     // or they'll block us from delivering. it's fine to ram them.
                     if (Game::me->has_structure_at(enemy_ship.pos)) continue;
 
-                    if (false && enemy_is_cautious) {  // currently only ever true in 4p
+                    if (enemy_is_cautious) {  // currently only ever true in 4p
                         // This player generally doesn't move adjacent to opponents' ships.
                         // Let's only rely on this if they are currently not adjacent to one
                         // of their structures and also not adjacent to any of our ships (because
@@ -258,6 +266,20 @@ struct Bot {
     //                        if (impassable(pos)) Log::flog_color(pos, 125, 0, 0, "impassable");
     //                        else Log::flog_color(pos, 0, 125, 0, "passable");
                         } else {  // 4-player games
+                            const int allied_ship_id = allied_ship_id_at(pos);
+                            if (allied_ship_id != -1) {
+                                // There's an allied ship here.
+                                // In most cases, we don't expect an enemy to ram our ships in 4p
+                                // Let's just check with the PlayerAnalyzer to see if it agrees
+                                const Ship allied_ship = Game::me->id_to_ship.at(allied_ship_id);
+                                if (!PlayerAnalyzer::player_might_ram(enemy.id, allied_ship, enemy_ship)) {
+                                    // The PlayerAnalyzer doesn't expect the enemy to ram, so we won't set
+                                    // this location impassable
+                                    //if (my_ship.id == 2) Log::flog_color(pos, 255, 0, 0, "maybe safe");
+                                    continue;
+                                }
+                            }
+
                             // messy memoization for speed :(
                             Memo<bool> &memo = we_win_fight_4p_cache(pos);
                             if (!memo.computed) memo.set(we_win_fight_4p(pos));
@@ -648,6 +670,37 @@ struct Bot {
             effective_halite(enemy_ship.pos) += ENEMY_SHIP_HALITE_FRAC.get(0.5) * enemy_ship.halite;  // TUNE
         }
 
+        // We're going to fudge the score of a square upward by an amount proportional to the average halite
+        // richness of the closest return point. The return point can either be an existing structure or the
+        // planned dropoff position
+        // This whole thing is only very slightly better at best
+        //     2p:  376-341    4p:  397-369-349-325
+        // so maybe just get rid of it
+        vector<Vec> return_points = Game::me->structures;
+        if (want_dropoff) return_points.push_back(planned_dropoff_pos);
+        vector<pair<Vec, double>> return_points_and_bonuses;
+        for (Vec return_point : return_points) {
+            const double mean_halite_in_area = grid.mean_halite_in_manhattan_radius(return_point, 8); // TUNE!
+            const double bonus = MINING_RETURN_RICHNESS_BONUS_MULT.get(0.007) * mean_halite_in_area;   // TUNE!
+            return_points_and_bonuses.push_back({return_point, bonus});             
+            Log::flog(return_point, "mean halite in area = %f", mean_halite_in_area);
+            Log::flog(return_point, "bonus = %f", bonus);
+        }
+        PosMap<double> return_richness_bonus(0.0);
+        for (Vec v : grid.positions) {
+            int smallest_dist = 999999;
+            double bonus = 0.0;
+            for (const pair<Vec, double> &return_point_and_bonus : return_points_and_bonuses) {
+                const int dist = grid.dist(v, return_point_and_bonus.first);
+                if (dist < smallest_dist) {
+                    smallest_dist = dist;
+                    bonus = return_point_and_bonus.second;
+                }
+            }
+            return_richness_bonus(v) = bonus;
+//            if (Game::turn < 200) Log::flog(v, "return_richness_bonus = %f", return_richness_bonus(v));
+        }
+
         PosMap<int> tgt_to_ship_id(-1);
         deque<Ship> q;
         std::copy(miners.begin(), miners.end(), std::back_inserter(q));
@@ -711,7 +764,9 @@ struct Bot {
                 const double total_time = turns_to_fill_up 
                                         + dist_from_base 
                                         + MINING_DIST_FROM_ME_MULT.get(2.0) * dist_from_me;  // TUNE. MINING_DIST_FROM_ME_MULT 1.0 is worse than 2.0, 3.0 about the same as 1.0
-                const double overall_halite_rate = halite_needed / total_time;
+                double overall_halite_rate = halite_needed / total_time;
+                overall_halite_rate += return_richness_bonus(pos);
+//                if (Game::turn < 200 && ship.id == 1) Log::flog(pos, "overall_halite_rate = %f", overall_halite_rate);
 
                 if (overall_halite_rate > best_halite_rate) {
                     best_halite_rate = overall_halite_rate;
@@ -834,6 +889,9 @@ struct Bot {
             const double avg_ship_dist = grid.average_dist(pos, Game::me->ships);
             const double ship_dist_factor = exp(-DROPOFF_SHIP_DIST_PENALTY.get(0.02) * avg_ship_dist);
 
+            /*const int dist_to_closest_enemy = grid.smallest_dist(pos, Game::enemy_ships);
+            const double enemy_dist_factor = exp(-DROPOFF_ENEMY_DIST_PENALTY.get(0.02) * max(7, dist_to_closest_enemy));*/
+
             double score = new_halite_in_radius * ship_dist_factor;
             /*if (Game::turn < 200) {
                 Log::flog(pos, "score = %f", score);
@@ -853,15 +911,20 @@ struct Bot {
 
         Log::flog_color(best_pos, 255, 0, 0, "best dropoff target: score = %d", best_score);
 
+        bool actually_built = false;
+
         // find the nearest ship
         Ship ship = grid.closest(best_pos, Game::me->ships);
         Log::flog_color(ship.pos, 0, 0, 255, "going to dropoff target");
         if (ship.pos == best_pos) {
             // we're at the target!
-            const int total_halite = Game::me->halite + ship.halite + grid(ship.pos).halite;
-            if (total_halite >= Constants::DROPOFF_COST) {
+            const int adjusted_dropoff_cost = Constants::DROPOFF_COST - ship.halite - grid(ship.pos).halite;
+            if (Game::me->halite >= adjusted_dropoff_cost) {
                 // can build, so do it
                 commands.push_back(Command::construct(ship.id));
+                // immediately update our player data, including our halite total
+                Game::me->immediately_add_dropoff(adjusted_dropoff_cost, ship.pos);
+                actually_built = true;
             } else {
                 // Can't build yet; chill out.
                 // Put this in the planning system so other ships path around us.
@@ -875,8 +938,13 @@ struct Bot {
             plan(ship, best_pos, Purpose::Mine);  // maybe want a different Purpose
         }
 
-        want_dropoff = true;
-        planned_dropoff_pos = best_pos;
+        if (!actually_built) {
+            // if we did build, then our Player structures list and halite already got updated
+            // to reflect the new structure. If we didn't build, let's remember the fact that we
+            // want to build
+            want_dropoff = true;
+            planned_dropoff_pos = best_pos;
+        }
         busy_ship_ids.insert(ship.id);
     }
 
@@ -930,10 +998,10 @@ struct Bot {
                 Log::flog(ship.pos, "not fleeing b/c busy");
                 continue;
             }
-            if (returning_ship_ids.count(ship.id)) {
+            /*if (returning_ship_ids.count(ship.id)) {
                 Log::flog(ship.pos, "not fleeing b/c returning");
                 continue;  // returning ships will already path to avoid enemies. except, not necessarily??
-            }
+            }*/
             if (!can_move(ship)) {
                 Log::flog(ship.pos, "not fleeing b/c can't move");
                 continue;

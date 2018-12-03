@@ -28,6 +28,20 @@ void Player::post_update()
     }
 }
 
+void Player::immediately_add_dropoff(int adjusted_cost, Vec pos)
+{
+    halite -= adjusted_cost;
+
+    Dropoff fake_new_dropoff;
+    fake_new_dropoff.id = 999;
+    fake_new_dropoff.pos = pos;
+    dropoffs.push_back(fake_new_dropoff);
+
+    // recalc all our data to account for this new dropoff
+    post_update();
+}
+
+
 string Player::toString() const
 {
     return stringf("Player(id=%d shipyard=%s halite=%d ships=%d dropoffs=%d)", 

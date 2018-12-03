@@ -15,8 +15,26 @@ NEED TO ACCOUNT FOR INSPIRATION IN DROPOFF PLACEMENT CHOICE
 
 TECCLES IS EXPLOITING MY LACK OF AGGRESSIVE MOVES IN 4P
 in general we need to study teccles's caution decisions
+some guesses about teccles's heuristics:
+ - he seems ok with moving next to enemies that have more halite
+ - maybe he thinks enemies won't move onto squares with less halite than the square they are on right now? (adjusted for inspiration?)
+ - maybe he guesses which ships are returners and expects them to not move away from structures
+ - maybe he guesses that squares that currently contain an allied ship are safe
+ - I get the sense that he has some tradeoff where he doesn't WANT to move next to an enemy but
+   if it gives inspiration then it might be worth it. So rather than my hard impassable/passable thing
+   he is balancing some numbers like his halite, his opponent's halite, and the halite on the square, accounting for inspiration.
 
-REALLY NEED TO FIX THE THING WHERE WE WON'T RAM A LOW-HALITE ENEMY ON A HIGH-HALITE SQUARE. EXAMPLE: turn 370 ship 103 https://halite.io/play/?game_id=2599738 
+I think teccles's unsafe moves can mostly be explained if we assume he
+- allows himself to move next to enemies with more halite AND
+- allows himself to move next to enemies that can't move AND
+- allows himself to move onto squares currently occupied by an allied ship AND
+- allows himself to move next to enemies with less halite if the square the enemy is on has more halite than the square he's considering moving to
+- also when his returners get in a tight spot they possibly violate this
+
+I think teccles possibly has a fear of low-halite ships that deliberately move next to one of his ships
+
+
+Returners shouldn't path around other returners unless the other returners aren't moving. Motivation is my ship 12 in https://halite.io/play/?game_id=2627576
 
 we should be more proactive about predicting the 2nd+ dropoff location and preferring to mine near there
 
@@ -27,6 +45,8 @@ we should penalize dropoff locations that are far from any potential builder whe
 in 2p, we should look at cases where many of our ships can be inspired by fewer enemy ships and vice versa
 
 check if we can use halite arriving on a dropoff this turn to spawn a ship
+
+I build dropoffs in enemy-control territory which is pretty dumb
 
 there's got to be a way to make my movement when mining more efficient: currently my guys are
 pathing around each other all the time. when a ship finds that it's going to path of it its

@@ -53,6 +53,7 @@ class Grid final
 
     int halite_in_square(Vec center, int R) const;
     int halite_in_manhattan_radius(Vec center, int R) const;
+    double mean_halite_in_manhattan_radius(Vec center, int R) const;
     
   private:
     vector<Cell> cells;

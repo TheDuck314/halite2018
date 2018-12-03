@@ -288,3 +288,18 @@ int Grid::halite_in_manhattan_radius(Vec center, int R) const
     }
     return ret;
 }
+
+double Grid::mean_halite_in_manhattan_radius(Vec center, int R) const
+{
+    int numerator = 0;
+    int denominator = 0;
+    for (int dx = -R; dx <= R; ++dx) {
+        const int y_radius = R - abs(dx);
+        for (int dy = -y_radius; dy <= y_radius; ++dy) {
+            Vec pos = add(center, dx, dy);
+            numerator += (*this)(pos).halite;
+            denominator += 1;
+        }
+    }
+    return numerator / (double) denominator;
+}

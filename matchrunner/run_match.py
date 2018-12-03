@@ -52,6 +52,7 @@ LOCAL_BOT_BINARIES = {
     "Omega^Omega":   "/home/greg/coding/halite/2018/repo/bots/30_powomegaomega/build/MyBot",
     "Epsilon_0":     "/home/greg/coding/halite/2018/repo/bots/31_epsilon0/build/MyBot",
     "Gamma_0":       "/home/greg/coding/halite/2018/repo/bots/32_gamma0/build/MyBot",
+    "SmallVeblen":   "/home/greg/coding/halite/2018/repo/bots/33_smallveblen/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -158,7 +159,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken28"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken30"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -320,12 +321,12 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Gamma_0"]
-    ref_bot = "Epsilon_0"
+    challenger_bots = ["SmallVeblen"]
+    ref_bot = "Gamma_0"
     """
-    challenger_base = "Gamma_0"
-    param = "RETURN_HALITE_THRESH"
-    values = [925, 975, 950]
+    challenger_base = "SmallVeblen"
+    param = "DROPOFF_ENEMY_DIST_PENALTY"
+    values = [0.04, 0.02, 0.01, 0.005, 0.0]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)

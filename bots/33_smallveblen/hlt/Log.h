@@ -38,6 +38,7 @@ class Log
     template<typename Arg1, typename... argv>
     static void flog(Vec pos, const char* format, Arg1 arg1, argv... args)
     {
+        if (!inited) return;  // if we've decided not to log, don't even bother formatting the string
         const string msg = stringf(format, arg1, args...);
         flog(pos, msg);
     }
@@ -46,6 +47,7 @@ class Log
     template<typename Arg1, typename... argv>
     static void flog_color(Vec pos, int r, int g, int b, const char* format, Arg1 arg1, argv... args)
     {
+        if (!inited) return;  // if we've decided not to log, don't even bother formatting the string
         const string msg = stringf(format, arg1, args...);
         flog_color(pos, r, g, b, msg);
     }

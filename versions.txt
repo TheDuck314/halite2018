@@ -183,14 +183,17 @@ final rank=2 μ=99.00 σ=0.70
 - rudimentary blocking of enemies' final collapse. In 4p we block enemies within 5k profit+carried of us; in 2p we always block.
   All together, including the enemy-can-move change, against powomegaomega: 2p:  306-209    4p:  365-301-301-206
 
-
 v42 32_gamma0
 - plan_mining knows we're going for 950 halite instead of 1000. Probably slightly better
 - 2p: instead of making enemies impassable and unrammable when their halite is less than ours, we add half the halite
   on the enemy's square to their halite so we can ram them when they're mining a good square. Didn't test this
 Overall against 31_epsilon0:  2p:  358-303    4p:  374-356-340-281
 
-
+v43 33_smallveblen
+REMEMBER TO REENABLE CAUTIOUSNESS EXPLOITATION
+- crude small bonus in plan_mining based on the avg halite near the closest structure. maybe helps a tiny bit: 2p:  376-341    4p:  397-369-349-325
+- in 4p, a square currently containing an allied ship remains passable unless PlayerAnalyzer thinks an adjacent ship will ram
+overall vs 32_gamma0:  2p:  294-290    4p:  404-364-330-265
 
 
 

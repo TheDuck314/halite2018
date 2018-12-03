@@ -18,6 +18,7 @@ struct Dropoff
 
 struct Player
 {
+    // set by Network
     int id;
     Vec shipyard;
     int halite;
@@ -25,6 +26,7 @@ struct Player
     vector<Ship> ships;
     vector<Dropoff> dropoffs;
 
+    // computed by post_update()
     vector<Vec> structures;
     map<int, Ship> id_to_ship;
 
@@ -38,6 +40,11 @@ struct Player
 
     // update auxiliary structures after basic info is initialized at the beginning of the turn
     void post_update();
+
+    // update our data mid-turn to account for building a dropoff this turn
+    // adjusted_cost is the cost after taking out the savings from the halite
+    // on the build square and the halite in the building ship
+    void immediately_add_dropoff(int adjusted_cost, Vec pos);
 
     string toString() const;
     string toLongString() const;

@@ -34,6 +34,8 @@ class PlayerAnalyzer final
     {
         int at_risk_count = 0;  // each turn for each ship of this player that could have moved to an unsafe square
         int moved_to_unsafe_count = 0;  // number of times one of this player's ships moved to an unsafe square
+        // number of times one of this player's ships moved to a square adjacent to an enemy with less halite than that ship
+        int moved_next_to_lower_halite_enemy_count = 0;  
 
         int num_missed_rams = 0;  // number of times one of this player's ships tried to ram an enemy, but missed b/c the enemy fled
 
@@ -57,10 +59,13 @@ class PlayerAnalyzer final
         // for each ship of this player, how many turns in a row it's been blocking one of our dropoffs
         map<int, int> sid_to_consecutive_blocking_turns;
         set<int> structure_blocker_sids;
+        // for each square, the minimum halite of all adjacent enemy ships on the previous turn, or 9999 if there
+        // were no adjacent enemy ships
+        PosMap<int> min_adjacent_enemy_ship_halite;
         
         PlayerStats stats;
 
-        PlayerData() : unsafe_map(false), enemy_ship_map(false) {}
+        PlayerData() : unsafe_map(false), enemy_ship_map(false), min_adjacent_enemy_ship_halite(-1) {}
     };
 
     static vector<PlayerData> pid_to_data;
