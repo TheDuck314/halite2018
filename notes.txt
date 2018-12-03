@@ -1,6 +1,48 @@
-Using return_halite_thresh (default 950) instead of MAX_HALITE in plan_mining
-                                                Gamma_0    2p:  133-123    4p:  135-151-118-99
-                                              Epsilon_0    2p:  123-133    4p:  368-352-385-404
+32x32 only, SHIPS_PER_LATER_DROPOFF fixed at 20
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=11    2p:  62-66    4p:  96-76-48-39
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=13    2p:  72-56    4p:  90-72-51-45
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=15    2p:  69-58    4p:  84-61-61-52
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=19    2p:  63-65    4p:  57-63-74-65
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=21    2p:  62-65    4p:  68-61-61-68
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=17    2p:  310-328    4p:  897-959-997-1023
+and
+                   LargeVeblen.SHIPS_FOR_FIRST_DROPFF=7    2p:  66-123    4p:  94-58-58-160
+                   LargeVeblen.SHIPS_FOR_FIRST_DROPFF=9    2p:  97-91    4p:  142-67-53-108
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=11    2p:  92-96    4p:  147-75-60-88
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=13    2p:  96-93    4p:  122-103-73-72
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=17    2p:  403-351    4p:  975-1177-1236-1052
+
+40x40 only, SHIPS_PER_LATER_DROPOFF fixed at 20
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=11    2p:   0- 0    4p:  103-47-35-36
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=13    2p:   0- 0    4p:  82-48-51-40
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=15    2p:   0- 0    4p:  82-47-47-44
+                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=17    2p:   0- 0    4p:  67-52-60-42
+
+48x48 only, SHIPS_PER_LATER_DROPOFF fixed at 20
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=11    2p:  81-68    4p:  93-71-55-59
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=13    2p:  76-73    4p:  95-74-54-55
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=15    2p:  70-78    4p:  87-69-50-72
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=17    2p:  84-65    4p:  71-75-72-60
+                                            SmallVeblen    2p:  284-311    4p:  766-823-881-866
+
+56x56 only, SHIPS_PER_LATER_DROPOFF fixed at 20
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=11    2p:  28-29    4p:  42-28-25-25
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=13    2p:  34-23    4p:  35-29-32-24
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=15    2p:  32-25    4p:  46-29-31-14
+                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=17    2p:  23-34    4p:  34-34-23-29
+                                            SmallVeblen    2p:  111-117    4p:  323-360-369-388
+
+
+
+64x64 only SHIPS_FOR_FIRST_DROPFF fixed at 17
+MUSTDO IMPLEMENT THIS
+                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=16    2p:  83-109    4p:  120-94-104-89
+                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=18    2p:  87-105    4p:  119-100-104-84
+                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=20    2p:  84-108    4p:  98-108-92-109
+                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=22    2p:  94-98    4p:  95-106-92-114
+                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=24    2p:  97-95    4p:  90-95-113-109
+
+
 
 
 
@@ -12,6 +54,16 @@ ALSO, WE OFTEN GO RIGHT PAST THE GUY WERE TRYING TO BLOCK
 ALSO RELATEDLY WHEN WE TRY TO RAM WE'LL PROBABLY GIVE UP THE BLOCK
 
 NEED TO ACCOUNT FOR INSPIRATION IN DROPOFF PLACEMENT CHOICE
+
+THIS LOSS AGAINST MLOMB NEEDS A CLOSER LOOK. https://halite.io/play/?game_id=2633101
+I HAD A CLEAR LEAD BUT EITHER
+- built too many ships?
+- let too many ships die?
+- got confused by a pack of enemy ships blocking some dropoffs?
+not sure
+
+I HAD A BIG EARLY LEAD AGAINST TECCLES HERE AND BLEW IT SOMEHOW. BAD SECONDARY DROPOFF LOCATIONS?
+https://halite.io/play/?game_id=2636192
 
 TECCLES IS EXPLOITING MY LACK OF AGGRESSIVE MOVES IN 4P
 in general we need to study teccles's caution decisions
@@ -33,6 +85,19 @@ I think teccles's unsafe moves can mostly be explained if we assume he
 
 I think teccles possibly has a fear of low-halite ships that deliberately move next to one of his ships
 
+recent reasons for 2p losses:
+- against teccles: either making a bad dropoff far away, or not actually sending any ships to it b/c we're chasing inspiration: https://halite.io/play/?game_id=2598374
+
+reasons for 4p losses:
+- many awful dropoff decisions: https://halite.io/play/?game_id=2598294
+- useless dropoff in 32x32 4p? https://halite.io/play/?game_id=2598446
+- still losing from clearly bad far-away dropoffs: https://halite.io/play/?game_id=2632430
+- teccles makes a nice rather-early dropoff that completely claims the center and gets a lot of inspiration https://halite.io/play/?game_id=2633040
+  another very similar game: https://halite.io/play/?game_id=2633144
+- didn't build enough ships! on 32x32 against recurse: https://halite.io/play/?game_id=2633128
+  again! against teccles and siesta: https://halite.io/play/?game_id=2633322
+- 32x32, teccles builds 2 dropoffs when I build 1, and his are very early (two by 29 ships!) https://halite.io/play/?game_id=2634046
+  basically the same exact thing here: https://halite.io/play/?game_id=2634230
 
 Returners shouldn't path around other returners unless the other returners aren't moving. Motivation is my ship 12 in https://halite.io/play/?game_id=2627576
 
@@ -60,13 +125,6 @@ need to adopt anti-siesta-block code for his new endgame timing: https://halite.
 
 here's an instructive game: teccles gets rocked by me and recurse b/c we build dropoffs next to each other and
 get a ton of inspiration
-
-recent reasons for 2p losses:
-- against teccles: either making a bad dropoff far away, or not actually sending any ships to it b/c we're chasing inspiration: https://halite.io/play/?game_id=2598374
-
-reasons for 4p losses:
-- many awful dropoff decisions: https://halite.io/play/?game_id=2598294
-- useless dropoff in 32x32 4p? https://halite.io/play/?game_id=2598446
 
 
 

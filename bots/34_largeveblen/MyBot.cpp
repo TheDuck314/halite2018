@@ -45,6 +45,8 @@ PARAM(int, MAX_HALITE_TO_RAM_2P);
 PARAM(int, HALITE_DIFF_CAUTION_THRESH_2P);
 PARAM(int, DEBUG_MAX_SHIPS);
 PARAM(int, RETURN_HALITE_THRESH);
+PARAM(int, SHIPS_FOR_FIRST_DROPOFF);
+PARAM(int, SHIPS_PER_LATER_DROPOFF);
 PARAM(bool, CONSIDER_RAMMING_IN_4P);
 PARAM(bool, DONT_MINE_RAM_TARGETS);
 PARAM(bool, DONT_BUILD_NEAR_ENEMY_STRUCTURES);
@@ -820,7 +822,33 @@ struct Bot {
             Log::log("too late to make dropoff");
             return;
         }
-        if (Game::me->ships.size() < -3 + 20 * (1 + Game::me->dropoffs.size())) {  // TUNE
+
+        int ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(17);
+        int ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
+        if (Game::num_players == 2) {
+            // 2 player
+
+        } else {
+            // 4 player
+            if (grid.width == 32) {
+                ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(11);
+                ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
+            } else if (grid.width == 40) {
+                ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(11);
+                ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
+            } else if (grid.width == 48) {
+                ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(13);
+                ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
+            } else if (grid.width == 56) {
+                ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(15);
+                ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
+            } else if (grid.width == 64) {
+                ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(17);
+                ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(18);  // NOTE 18 NOT 20 !!  weak evidence for this in a test
+            }
+        }
+
+        if (Game::me->ships.size() < ships_for_first_dropoff + ships_per_later_dropoff * Game::me->dropoffs.size()) {  // TUNE
             Log::log("not enough ships to make dropoff");
             return;
         }

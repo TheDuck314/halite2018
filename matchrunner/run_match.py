@@ -53,6 +53,7 @@ LOCAL_BOT_BINARIES = {
     "Epsilon_0":     "/home/greg/coding/halite/2018/repo/bots/31_epsilon0/build/MyBot",
     "Gamma_0":       "/home/greg/coding/halite/2018/repo/bots/32_gamma0/build/MyBot",
     "SmallVeblen":   "/home/greg/coding/halite/2018/repo/bots/33_smallveblen/build/MyBot",
+    "LargeVeblen":   "/home/greg/coding/halite/2018/repo/bots/34_largeveblen/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -159,7 +160,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken30"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken31"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -321,12 +322,14 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["SmallVeblen"]
-    ref_bot = "Gamma_0"
+    challenger_bots = ["LargeVeblen"]
+    ref_bot = "SmallVeblen"
     """
-    challenger_base = "SmallVeblen"
-    param = "DROPOFF_ENEMY_DIST_PENALTY"
-    values = [0.04, 0.02, 0.01, 0.005, 0.0]
+    challenger_base = "LargeVeblen"
+    param = "SHIPS_FOR_FIRST_DROPOFF"
+    values = [11, 13, 15, 17]
+#    param = "SHIPS_PER_LATER_DROPOFF"
+#    values = [16, 18, 20, 22, 24]
     challenger_bots = []
     for val in values:
         override = param + "=" + str(val)
@@ -334,8 +337,8 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    ref_bot = challenger_bots.pop()
-    #ref_bot = "OmegaTimesTwo"
+    #ref_bot = challenger_bots.pop()
+    ref_bot = "SmallVeblen"
     """
 
     bots = challenger_bots + [ref_bot]

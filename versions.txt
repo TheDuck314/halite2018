@@ -191,10 +191,14 @@ final rank=2 μ=97.56 σ=0.66
 Overall against 31_epsilon0:  2p:  358-303    4p:  374-356-340-281
 
 v43 33_smallveblen
-REMEMBER TO REENABLE CAUTIOUSNESS EXPLOITATION
 - crude small bonus in plan_mining based on the avg halite near the closest structure. maybe helps a tiny bit: 2p:  376-341    4p:  397-369-349-325
 - in 4p, a square currently containing an allied ship remains passable unless PlayerAnalyzer thinks an adjacent ship will ram
 overall vs 32_gamma0:  2p:  294-290    4p:  404-364-330-265
+
+v44 34_largeveblen
+- 4p: # of ships for first dropoff depends on map size and is faster than the old 17 for maps smaller than 64x64
+  also for 64x64 subsequent dropoffs are every 18 ships rather than every 20
+Against 33_smallveblen: 174-123-107-97
 
 
 
