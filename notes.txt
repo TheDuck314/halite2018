@@ -43,7 +43,10 @@ MUSTDO IMPLEMENT THIS
                  LargeVeblen.SHIPS_PER_LATER_DROPOFF=24    2p:  97-95    4p:  90-95-113-109
 
 
+nets to capture fleeing enemies in 2p would be super sweet
 
+MAKE A TOOL TO ANALYZE WHETHER WE'RE BUILDING THE RIGHT NUMBER OF SHIPS
+ALSO TRY TUNING THE STOP CONDITION ON A PER-MAP-SIZE BASIS, SINCE PROBABLY 4P 32X32 AT LEAST NEEDS A DIFFERENT CONDITION
 
 
 make returners flee?
@@ -61,6 +64,8 @@ I HAD A CLEAR LEAD BUT EITHER
 - let too many ships die?
 - got confused by a pack of enemy ships blocking some dropoffs?
 not sure
+
+We should prefer to mine toward our dropoff target well before we hit the ship count for it
 
 I HAD A BIG EARLY LEAD AGAINST TECCLES HERE AND BLEW IT SOMEHOW. BAD SECONDARY DROPOFF LOCATIONS?
 https://halite.io/play/?game_id=2636192
@@ -96,8 +101,12 @@ reasons for 4p losses:
   another very similar game: https://halite.io/play/?game_id=2633144
 - didn't build enough ships! on 32x32 against recurse: https://halite.io/play/?game_id=2633128
   again! against teccles and siesta: https://halite.io/play/?game_id=2633322
+  didn't build enough ships on 40x40 against cdurbin & recurse: https://halite.io/play/?game_id=2638969
 - 32x32, teccles builds 2 dropoffs when I build 1, and his are very early (two by 29 ships!) https://halite.io/play/?game_id=2634046
   basically the same exact thing here: https://halite.io/play/?game_id=2634230
+- I almost lose this one against recurse b/c I try to use a dropoff that his ships have surrounded https://halite.io/play/?game_id=2638597
+- again, teccles builds a close dropoff and gets fast inspiration, I build a far dropoff and get nothing https://halite.io/play/?game_id=2638745
+- here's a game I SHOULD have lost for building a far dropoff: https://halite.io/play/?game_id=2639350
 
 Returners shouldn't path around other returners unless the other returners aren't moving. Motivation is my ship 12 in https://halite.io/play/?game_id=2627576
 

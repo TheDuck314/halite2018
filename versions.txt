@@ -191,6 +191,7 @@ final rank=2 μ=97.56 σ=0.66
 Overall against 31_epsilon0:  2p:  358-303    4p:  374-356-340-281
 
 v43 33_smallveblen
+final rank=2    should figure out final mu+sigma, it was probably about 98.50 mu
 - crude small bonus in plan_mining based on the avg halite near the closest structure. maybe helps a tiny bit: 2p:  376-341    4p:  397-369-349-325
 - in 4p, a square currently containing an allied ship remains passable unless PlayerAnalyzer thinks an adjacent ship will ram
 overall vs 32_gamma0:  2p:  294-290    4p:  404-364-330-265

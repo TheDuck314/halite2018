@@ -322,6 +322,7 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
+    """
     challenger_bots = ["LargeVeblen"]
     ref_bot = "SmallVeblen"
     """
@@ -339,7 +340,6 @@ def main():
 
     #ref_bot = challenger_bots.pop()
     ref_bot = "SmallVeblen"
-    """
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots
