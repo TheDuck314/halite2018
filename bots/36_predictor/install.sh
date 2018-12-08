@@ -1,14 +1,18 @@
 #!/bin/bash
 
-set -ex
-
-#unzip libtorch-shared-with-deps-latest.zip
-wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip
+# get pytorch
+wget https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip 2>/dev/null
 unzip libtorch-shared-with-deps-latest.zip
-TORCH_PATH=$(pwd)/libtorch
-mkdir build
-cd build
-cmake -DCMAKE_PREFIX_PATH=${TORCH_PATH} ..
+
+# make, pointing cmake to pytorch
+cmake -DCMAKE_PREFIX_PATH=./libtorch .
 make
-ln -s $(pwd)/MyBot ../MyBot
+
+# save some space or else the compile script complains
+# about us using too much
+rm libtorch-shared-with-deps-latest.zip
+rm libtorch/lib/*.a
+
+pwd
+ls -la
 

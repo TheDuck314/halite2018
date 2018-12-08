@@ -202,5 +202,11 @@ final rank=2 μ=98.61 σ=0.28
   also for 64x64 subsequent dropoffs are every 18 ships rather than every 20
 Against 33_smallveblen: 174-123-107-97
 
+45 36_predictor
+highly experimental nn-based safety prediction
+crashes with .so failures
 
+v46 reuupload of 34_largeveblen
+
+v47 another attempt at 36_predictor
 

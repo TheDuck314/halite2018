@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O2 -Wall -Wno-unused-function -pedantic")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Wno-unused-function -pedantic -pg")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=./libtorch/lib")
 
 include_directories(${CMAKE_SOURCE_DIR}/hlt)
 

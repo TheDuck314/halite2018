@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <unordered_set>
+#include <iostream>
 #include "hlt/Constants.h"
 #include "hlt/Game.h"
 #include "hlt/Network.h"
@@ -1484,6 +1485,12 @@ struct Bot {
 
 int main(int argc, char **argv)
 {
+    //string mystring;
+    //cin >> mystring;
+    //cerr << "BOT START!!" << mystring << ".\n";
+    //cout << "BOT START!!" << mystring << ".\n";
+    //exit(-1);
+
     ParameterBase::parse_all(argc, argv);
 
     Network::init();
