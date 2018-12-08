@@ -81,6 +81,13 @@ features
   - well, maybe we can! maybe just combine probabilities of different opponents going there in a naive way
 - also possible: train an opponent-recognizer and then use it to switch between safety networks somehow
 
+DONT ACTUALLY SEND SHIPS TO MAKE DROPOFFS
+
+ships are looking quite indecisive - DEBUG!
+
+we could jitter if the Predictor thinks a square is safe but then the PlayerAnalyzer thinks we'll get rammed?
+
+it seems very possible that we have the wrong move-on mult in the late game when most stuff is mined out
 
 nets to capture fleeing enemies in 2p would be super sweet
 
