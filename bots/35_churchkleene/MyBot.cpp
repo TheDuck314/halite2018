@@ -823,11 +823,12 @@ struct Bot {
             return;
         }
 
-        int ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(17);
-        int ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
+        int ships_for_first_dropoff;
+        int ships_per_later_dropoff;
         if (Game::num_players == 2) {
             // 2 player
-
+            ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(17);
+            ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
         } else {
             // 4 player
             if (grid.width == 32) {
@@ -842,7 +843,7 @@ struct Bot {
             } else if (grid.width == 56) {
                 ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(15);
                 ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
-            } else if (grid.width == 64) {
+            } else /* grid.width == 64 */ {
                 ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(17);
                 ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(18);  // NOTE 18 NOT 20 !!  weak evidence for this in a test
             }

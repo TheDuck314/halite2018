@@ -54,6 +54,7 @@ LOCAL_BOT_BINARIES = {
     "Gamma_0":       "/home/greg/coding/halite/2018/repo/bots/32_gamma0/build/MyBot",
     "SmallVeblen":   "/home/greg/coding/halite/2018/repo/bots/33_smallveblen/build/MyBot",
     "LargeVeblen":   "/home/greg/coding/halite/2018/repo/bots/34_largeveblen/build/MyBot",
+    "ChurchKleene":  "/home/greg/coding/halite/2018/repo/bots/35_churchkleene/build/MyBot",
 }
 
 def local_bot_binary_to_ec2(local_fn):
@@ -326,9 +327,9 @@ def main():
     challenger_bots = ["LargeVeblen"]
     ref_bot = "SmallVeblen"
     """
-    challenger_base = "LargeVeblen"
-    param = "SHIPS_FOR_FIRST_DROPOFF"
-    values = [11, 13, 15, 17]
+    challenger_base = "ChurchKleene"
+    param = "MIN_HALITE_PER_SHIP_TO_SPAWN_4P"
+    values = [1000, 1500, 1750, 1999, 2250, 2500, 3000, 2000]
 #    param = "SHIPS_PER_LATER_DROPOFF"
 #    values = [16, 18, 20, 22, 24]
     challenger_bots = []
@@ -338,8 +339,8 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    #ref_bot = challenger_bots.pop()
-    ref_bot = "SmallVeblen"
+    ref_bot = challenger_bots.pop()
+    #ref_bot = "SmallVeblen"
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots

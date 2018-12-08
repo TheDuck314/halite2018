@@ -197,6 +197,7 @@ final rank=2    should figure out final mu+sigma, it was probably about 98.50 mu
 overall vs 32_gamma0:  2p:  294-290    4p:  404-364-330-265
 
 v44 34_largeveblen
+final rank=2 μ=98.61 σ=0.28
 - 4p: # of ships for first dropoff depends on map size and is faster than the old 17 for maps smaller than 64x64
   also for 64x64 subsequent dropoffs are every 18 ships rather than every 20
 Against 33_smallveblen: 174-123-107-97

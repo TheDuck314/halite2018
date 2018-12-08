@@ -15,4 +15,5 @@ bots/*/.vscode/
 bots/0_starterbotcpp/MyBot
 bots/0_starterbotcpp/*.o
 bots/*/hlt/__pycache__/
+bots/tmpbuild
 *.swp
