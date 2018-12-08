@@ -19,7 +19,7 @@ namespace torch {
 class Predictor
 {
   public:
-    Predictor(PredictorDataCollector &_collector);
+    Predictor(PredictorDataCollector &_collector, const string &model_fn);
 
     struct Prediction {
         Vec pos;

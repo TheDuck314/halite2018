@@ -48,7 +48,7 @@ class Parameter : public ParameterBase
   protected:
     void parse(int argc, char **argv) override
     {
-        Log::log("parsing parameter %s", +name);
+        //Log::log("parsing parameter %s", +name);
         const string prefix(name + "=");
         for (int i = 1; i < argc; ++i) {
             const string arg(argv[i]);
@@ -58,7 +58,7 @@ class Parameter : public ParameterBase
                 ss >> override_value;
                 if (ss.fail()) Log::die("Failed to parse parameter argument %s", +arg);
                 overridden = true;
-                Log::log("Parameter %s override = '%s'", +name, +to_parse);
+                //Log::log("Parameter %s override = '%s'", +name, +to_parse);
             }
         }
     }

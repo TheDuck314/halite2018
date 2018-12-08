@@ -19,6 +19,7 @@ PARAM(bool, NOLOG);
 void Log::init(int player_id)
 {
     // dumb thing: don't log on ec2 or we'll run out of disk:
+    // also don't log in live I guess
     char hostname[1024];
     gethostname(hostname, 1024);
     if (strcmp(hostname, "home") != 0) ENABLED = false;
@@ -27,10 +28,10 @@ void Log::init(int player_id)
 
     if (!ENABLED) return;
 
-    string fn = stringf("./replays/log-%d.txt", player_id);
+    string fn = stringf("./log-%d.txt", player_id);
     f_main.open(fn.c_str());
 
-    fn = stringf("./replays/fluorine-flog-%d.txt", player_id);
+    fn = stringf("./fluorine-flog-%d.txt", player_id);
     f_flog.open(fn.c_str());
     f_flog << "[" << endl;
 

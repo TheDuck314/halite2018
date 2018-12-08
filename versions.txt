@@ -203,10 +203,17 @@ final rank=2 μ=98.61 σ=0.28
 Against 33_smallveblen: 174-123-107-97
 
 45 36_predictor
-highly experimental nn-based safety prediction
+highly experimental nn-based safety prediction in 4p
 crashes with .so failures
 
-v46 reuupload of 34_largeveblen
+v46 reupload of v44 34_largeveblen
 
-v47 another attempt at 36_predictor
+v47 working upload of 36_predictor
+final rank=2 μ=98.76 σ=0.44
+
+v48 37_omega1
+- don't send an explicit dropoff building ship, just wait for a returner to get there
+against 36_predictor: 2p:  830-758    4p:  812-779-786-726  (so basically noise)
+
+
 

@@ -60,6 +60,7 @@ PARAM(bool, DO_DROPOFF_BLOCKING);
 PARAM(string, TRAINING_DATA_SAVE_FILENAME);
 PARAM(bool, JUST_MAKE_TRAINING_DATA);
 PARAM(bool, DONT_PREDICT);
+PARAM(string, PREDICTOR_MODEL);
 
 struct Bot {
     // GLOBAL STATE
@@ -82,7 +83,7 @@ struct Bot {
 
     Bot(int argc, char **argv)
       : ram_targets(false),
-        predictor(predictor_data_collector),
+        predictor(predictor_data_collector, PREDICTOR_MODEL.get("./safety_model.pt")),
         return_halite_thresh(RETURN_HALITE_THRESH.get(950))        
     {
     }
@@ -880,14 +881,13 @@ struct Bot {
             } else if (grid.width == 56) {
                 ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(15);
                 ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(20);
-            } else if (grid.width == 64) {
+            } else /* (grid.width == 64) */ {
                 ships_for_first_dropoff = SHIPS_FOR_FIRST_DROPOFF.get(17);
                 ships_per_later_dropoff = SHIPS_PER_LATER_DROPOFF.get(18);  // NOTE 18 NOT 20 !!  weak evidence for this in a test
             }
         }
 
         if (Game::me->ships.size() < ships_for_first_dropoff + ships_per_later_dropoff * Game::me->dropoffs.size()) {  // TUNE
-            Log::log("not enough ships to make dropoff");
             return;
         }
 
@@ -977,7 +977,7 @@ struct Bot {
 
         Log::flog_color(best_pos, 255, 0, 0, "best dropoff target: score = %d", best_score);
 
-        bool actually_built = false;
+        /*bool actually_built = false;
 
         // find the nearest ship
         Ship ship = grid.closest(best_pos, Game::me->ships);
@@ -1011,7 +1011,30 @@ struct Bot {
             want_dropoff = true;
             planned_dropoff_pos = best_pos;
         }
-        busy_ship_ids.insert(ship.id);
+        busy_ship_ids.insert(ship.id);*/
+
+        bool actually_built = false;
+        const Ship ship = grid.closest(best_pos, Game::me->ships);
+        if (ship.pos == best_pos) {
+            const int adjusted_dropoff_cost = Constants::DROPOFF_COST - ship.halite - grid(ship.pos).halite;
+            if (Game::me->halite >= adjusted_dropoff_cost) {
+                // can build, so do it
+                commands.push_back(Command::construct(ship.id));
+                busy_ship_ids.insert(ship.id);
+                // immediately update our player data, including our halite total
+                Game::me->immediately_add_dropoff(adjusted_dropoff_cost, ship.pos);
+                actually_built = true;
+                // this ship doesn't go into plans, so I think other ships won't avoid it,
+                // which is correct
+            }
+        }
+        if (!actually_built) {
+            // if we did build, then our Player structures list and halite already got updated
+            // to reflect the new structure. If we didn't build, let's remember the fact that we
+            // want to build
+            want_dropoff = true;
+            planned_dropoff_pos = best_pos;
+        }
     }
 
     void consider_ramming(vector<Command> &commands)
@@ -1478,6 +1501,7 @@ struct Bot {
             commands.push_back(Command::generate());
         }
 
+        PlayerAnalyzer::remember_my_commands(commands);
         return commands;
     }
 };
@@ -1485,29 +1509,21 @@ struct Bot {
 
 int main(int argc, char **argv)
 {
-    //string mystring;
-    //cin >> mystring;
-    //cerr << "BOT START!!" << mystring << ".\n";
-    //cout << "BOT START!!" << mystring << ".\n";
-    //exit(-1);
-
     ParameterBase::parse_all(argc, argv);
 
     Network::init();
 
     Bot bot(argc, argv);
 
-    // start the main game loop
+    // main game loop
     do {
         Network::begin_turn();
 
         vector<Command> commands = bot.turn();
 
-        PlayerAnalyzer::remember_my_commands(commands);
         Network::end_turn(commands);
     } while (Game::turn < Constants::MAX_TURNS);
 
     Log::log("Exiting.");
-
     return 0;
 }

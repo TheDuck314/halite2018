@@ -60,6 +60,7 @@ PARAM(bool, DO_DROPOFF_BLOCKING);
 PARAM(string, TRAINING_DATA_SAVE_FILENAME);
 PARAM(bool, JUST_MAKE_TRAINING_DATA);
 PARAM(bool, DONT_PREDICT);
+PARAM(string, PREDICTOR_MODEL);
 
 struct Bot {
     // GLOBAL STATE
@@ -82,7 +83,7 @@ struct Bot {
 
     Bot(int argc, char **argv)
       : ram_targets(false),
-        predictor(predictor_data_collector),
+        predictor(predictor_data_collector, PREDICTOR_MODEL.get("./safety_model.pt")),
         return_halite_thresh(RETURN_HALITE_THRESH.get(950))        
     {
     }

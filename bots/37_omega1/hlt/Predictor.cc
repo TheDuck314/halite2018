@@ -6,12 +6,12 @@
 #include <sstream>
 using namespace std;
 
-Predictor::Predictor(PredictorDataCollector &_collector)
+Predictor::Predictor(PredictorDataCollector &_collector, const string &model_fn)
   : collector(_collector)
 {
-    const char *model_path = "safety_model.pt";
-    module = torch::jit::load(model_path);
-    if (module == nullptr) Log::die("Couldn't load %s", model_path);
+    Log::log("model_fn = %s", +model_fn);
+    module = torch::jit::load(model_fn);
+    if (module == nullptr) Log::die("Couldn't load %s", model_fn);
 }
 
 void Predictor::predict(map<Vec, double> &safety_map)

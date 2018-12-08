@@ -25,6 +25,23 @@ def get_halite_binary():
     else:
         return LOCAL_HALITE_BINARY
     
+def get_model_fn(bot_binary):
+    bot_dir = os.path.dirname(bot_binary)
+    assert os.path.basename(bot_dir) == "build", bot_dir
+    bot_dir = os.path.dirname(bot_dir)
+    model_fn = os.path.join(bot_dir, "safety_model.pt")
+    if os.path.isfile(model_fn):
+        return model_fn
+    else:
+        return None
+
+def with_predictor_path(binary):
+    bot_dir = os.path.dirname(binary)
+    assert os.path.basename(bot_dir) == "build", bot_dir
+    bot_dir = os.path.dirname(bot_dir)
+    model_fn = os.path.join(bot_dir, "safety_model.pt")
+    predictor_dir_param = "PREDICTOR_MODEL={}".format(model_fn)
+    return " ".join([binary, predictor_dir_param])
 
 LOCAL_BOT_BINARIES = {
     "Zeta":    "/home/greg/coding/halite/2018/repo/bots/5_zeta/build/MyBot",
@@ -55,15 +72,29 @@ LOCAL_BOT_BINARIES = {
     "SmallVeblen":   "/home/greg/coding/halite/2018/repo/bots/33_smallveblen/build/MyBot",
     "LargeVeblen":   "/home/greg/coding/halite/2018/repo/bots/34_largeveblen/build/MyBot",
     "ChurchKleene":  "/home/greg/coding/halite/2018/repo/bots/35_churchkleene/build/MyBot",
+    "Predictor":     with_predictor_path("/home/greg/coding/halite/2018/repo/bots/36_predictor/build/MyBot"),
+    "Omega_1":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/37_omega1/build/MyBot"),
 }
 
-def local_bot_binary_to_ec2(local_fn):
-    return os.path.join("/home/ec2-user", local_fn.replace("/", "_"))
+def get_ec2_dir(local_fn):
+    local_dir = os.path.dirname(local_fn)
+    if os.path.basename(local_dir) == "build":
+        local_dir = os.path.dirname(local_dir)
+    remote_dir = os.path.join("/home/ec2-user", os.path.basename(local_dir))
+    return remote_dir
+
+def local_filename_to_ec2(local_fn):
+    return os.path.join(get_ec2_dir(local_fn), os.path.basename(local_fn))
 
 def get_bot_command(local_bot_command):
     if on_ec2():
         parts = local_bot_command.split()
-        parts[0] = local_bot_binary_to_ec2(parts[0])
+        parts[0] = local_filename_to_ec2(parts[0])
+        for i in range(1, len(parts)):
+            if "=" in parts[i]:
+                [key, val] = parts[i].split("=")
+                val = local_filename_to_ec2(val)
+                parts[i] = "=".join([key, val])
         return " ".join(parts)
     else:
         return local_bot_command
@@ -83,6 +114,14 @@ def run_game(game_dir, seed, mapsize, bots, bot_to_command):
 
     for bot in bots:
         command.append(get_bot_command(bot_to_command[bot]))
+    #print "GAME COMMAND:    {}".format(command)
+
+    if on_ec2():
+        # make sure bots can find torch libraries
+        os.environ["LD_LIBRARY_PATH"] = os.environ.get("LD_LIBRARY_PATH", "") + ";/home/ec2-user/libtorch/lib"
+        # make torch only use one thread otherwise things get super slow!
+        os.environ["OMP_NUM_THREADS"] = "1"
+        os.environ["MKL_NUM_THREADS"] = "1"
 
     with open(os.path.join(game_dir, "command.txt"), "w") as f:
         f.write("\n".join(command) + "\n")
@@ -161,7 +200,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken31"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken33"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -246,14 +285,6 @@ def request_spot_instance_and_wait_until_fulfilled():
     EC2_INSTANCE_DNS_NAME = "ec2-user@" + instance_dns_name
 
 def do_scp(src, dest):
-    """
-    cmd = [
-        "scp", 
-        "-i", EC2_KEYPAIR_FN,
-        src,
-        "{}:{}".format(EC2_INSTANCE_DNS_NAME, dest)
-    ]
-    """
     cmd = [
         "rsync",
         "-e", "ssh -i {}".format(EC2_KEYPAIR_FN),
@@ -263,22 +294,40 @@ def do_scp(src, dest):
     print "DOING RSYNC:    {}".format(" ".join(cmd))
     subprocess.check_output(cmd)
 
+def create_ec2_dir(ec2_dir):
+    cmd = [
+        "ssh",
+        "-i", EC2_KEYPAIR_FN,
+        EC2_INSTANCE_DNS_NAME,
+        "mkdir -p {}".format(ec2_dir)
+    ]
+    print "CREATING EC2 DIR WITH THIS COMMAND:     {}".format(" ".join(cmd))
+    subprocess.check_output(cmd)
+
+def run_script_on_ec2(local_script_fn):
+    ec2_script_fn = os.path.join("/home/ec2-user", os.path.basename(local_script_fn))
+    do_scp(local_script_fn, ec2_script_fn)
+    cmd = [
+        "ssh",
+        "-i", EC2_KEYPAIR_FN,
+        EC2_INSTANCE_DNS_NAME,
+        ec2_script_fn
+    ]
+    print "RUNNING SCRIPT ON EC2:  {}".format(" ".join(cmd))
+    subprocess.check_output(cmd)
+
+def install_torch_on_ec2():
+    print "Installing torch on ec2."
+    run_script_on_ec2("/home/greg/coding/halite/2018/repo/matchrunner/install_torch_on_ec2.sh")
+    print "Dpne installing torch on ec2."
+
 def kill_ec2_bot_processes():
     # super hacky
     # if we previously were running a match which we ctrl-c'd then there will be orphaned
     # MyBot processes still around. This will cause scp to fail when it tries to overwrite
     # their binaries. So first, we need to kill the MyBot processes
     print "Killing remote MyBot processes."
-    LOCAL_KILL_SCRIPT = "/home/greg/coding/halite/2018/repo/kill_bots.sh"
-    EC2_KILL_SCRIPT = "/home/ec2-user/kill_bots.sh"
-    do_scp(LOCAL_KILL_SCRIPT, EC2_KILL_SCRIPT)
-    cmd = [
-        "ssh",
-        "-i", EC2_KEYPAIR_FN,
-        EC2_INSTANCE_DNS_NAME,
-        EC2_KILL_SCRIPT
-    ]
-    subprocess.check_output(cmd)
+    run_script_on_ec2("/home/greg/coding/halite/2018/repo/kill_bots.sh")
     print "Done killing remote MyBot processes."
 
 def relaunch_self_on_ec2():
@@ -295,6 +344,16 @@ def relaunch_self_on_ec2():
     subprocess.Popen(cmd).wait()
     sys.exit(0)
 
+def copy_bot_files_to_ec2(bot_to_command, bots):
+    local_binaries_used = sorted(set(bot_to_command[bot].split()[0] for bot in bots))
+    for local_bin in local_binaries_used:
+        create_ec2_dir(get_ec2_dir(local_bin))
+        do_scp(local_bin, local_filename_to_ec2(local_bin))
+        local_model_fn = get_model_fn(local_bin)
+        if local_model_fn:
+            do_scp(local_model_fn, local_filename_to_ec2(local_model_fn))
+
+
 def launch_on_ec2(bot_to_command, bots):
     print "PREPARING EC2 RUN."
     request_spot_instance_and_wait_until_fulfilled()
@@ -302,10 +361,13 @@ def launch_on_ec2(bot_to_command, bots):
     kill_ec2_bot_processes()
 
     print "COPYING BINARIES:"
+    # copy the halite game binary
     do_scp(LOCAL_HALITE_BINARY, EC2_HALITE_BINARY)
-    local_binaries_used = sorted(set(bot_to_command[bot].split()[0] for bot in bots))
-    for local_bin in local_binaries_used:
-        do_scp(local_bin, local_bot_binary_to_ec2(local_bin))
+    # copy bot binaries and model files
+    copy_bot_files_to_ec2(bot_to_command, bots)
+    # install torch
+    install_torch_on_ec2()
+    # copy this run_match.py file
     do_scp(__file__, EC2_RUNMATCH)
 
     print "ok, now going to relaunch myself on ec2"
@@ -323,9 +385,8 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    """
-    challenger_bots = ["LargeVeblen"]
-    ref_bot = "SmallVeblen"
+    challenger_bots = ["Omega_1"]
+    ref_bot = "Predictor"
     """
     challenger_base = "ChurchKleene"
     param = "MIN_HALITE_PER_SHIP_TO_SPAWN_4P"
@@ -341,6 +402,7 @@ def main():
 
     ref_bot = challenger_bots.pop()
     #ref_bot = "SmallVeblen"
+    """
 
     bots = challenger_bots + [ref_bot]
     assert challenger_bots
@@ -371,7 +433,7 @@ def main():
     input_q = Queue()
     output_q = Queue()
     if on_ec2():
-        num_workers = 50
+        num_workers = 40
     else:
         num_workers = 3
     for _ in range(num_workers):

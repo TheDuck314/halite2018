@@ -111,14 +111,14 @@ void PredictorDataCollector::finish_last_turn_instances()
     // squares that now have enemy ships on them were unsafe
     for (Ship enemy_ship : Game::enemy_ships) {
         safe(enemy_ship.pos) = false;
-        Log::log("%s unsafe b/c enemy ship present", +enemy_ship.pos.toString());
+        //Log::log("%s unsafe b/c enemy ship present", +enemy_ship.pos.toString());
     }
 
     // squares whose halite went up were unsafe, since there must have been a collision
     for (Vec pos : grid.positions) {
         if (grid(pos).halite > last_turn_halite(pos)) {
             safe(pos) = false;
-            Log::log("%s unsafe b/c halite went up", +pos.toString());
+            //Log::log("%s unsafe b/c halite went up", +pos.toString());
         }
     }
 
@@ -129,7 +129,7 @@ void PredictorDataCollector::finish_last_turn_instances()
         Outputs outputs;
         outputs.safe = safe(half.pos);
         instances.push_back({half.inputs, outputs});
-        Log::log("Created full instance from half-instance at %s:\n%s", +half.pos.toString(), +instances.back().toString());
+        //Log::log("Created full instance from half-instance at %s:\n%s", +half.pos.toString(), +instances.back().toString());
     }
 
     last_turn_half_instances.clear();
@@ -225,7 +225,7 @@ void PredictorDataCollector::construct_inputs(const vector<Vec> &squares)
         inputs.input_scalars[0] = Game::turns_left() / 500.0f;  // normalized turns left
         last_turn_half_instances.push_back({inputs, pos});
 
-        Log::log("Created half instance:\n%s", +last_turn_half_instances.back().toString());
+        //Log::log("Created half instance:\n%s", +last_turn_half_instances.back().toString());
     }
 }
 
