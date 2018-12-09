@@ -221,4 +221,10 @@ v49 38_aleph1
 - MINING_DIST_FROM_ME_MULT 2.0 -> 1.75
 Against Omega_1:  2p:  105-74    4p:  137-94-91-58
 
+v50 39_aleph2
+- MIN_HALITE_PER_SHIP_TO_SPAWN_4P 2000 -> 1500
+  This is not based on any testing, but I've seen a lot of 4p 32x32 games where I seem to lose b/c I build too few ships,
+  and looking at my final-profit-per-ship-count-at-last-built-ship shows it reliably over 1000, so let's try it
+- remove the buggy incomplete final collapse blocking
+
 

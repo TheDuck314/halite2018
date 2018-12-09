@@ -205,7 +205,7 @@ def compute_spent_halite(frames, constants, num_players, player_names):
             elif event["type"] == "construct":
                 # TODO: is this right, or is the "cost" reduced by the halite on the square?
                 pid_to_collected_halite[event["owner_id"]][-1] += constants["DROPOFF_COST"]
-    return turn_player_df(pid_to_collected_halite, player_names)    
+    return turn_player_df(pid_to_collected_halite, player_names)
 
 
 def main():
