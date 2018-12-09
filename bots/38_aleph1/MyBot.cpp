@@ -742,6 +742,21 @@ struct Bot {
 //            if (Game::turn < 200) Log::flog(v, "return_richness_bonus = %f", return_richness_bonus(v));
         }
 
+        map<int, PosMap<int>> sid_to_travel_time;
+        for (Ship s : miners) {
+            sid_to_travel_time.emplace(s.id, Path::build_halite_travel_time_map(s.pos, sid_to_impassable.at(s.id)));
+
+            /*if (s.id == 2) {
+                const PosMap<int> &travel_time = sid_to_travel_time.at(s.id);
+                for (Vec v : grid.positions) {
+                    int color = max(0, min(255, 255 - 8 * travel_time(v))); 
+                    Log::flog_color(v, 0, color, color, "tt = %d", travel_time(v));
+                }
+            }*/
+        }
+
+
+
         PosMap<int> tgt_to_ship_id(-1);
         deque<Ship> q;
         std::copy(miners.begin(), miners.end(), std::back_inserter(q));
@@ -755,6 +770,7 @@ struct Bot {
             //const int my_dist_from_base = sid_to_base_dist.at(ship.id);
 
             const PosSet &impassable = sid_to_impassable.at(ship.id);
+            const PosMap<int> &travel_time = sid_to_travel_time.at(ship.id);
 
             // pick the best target.
             double best_halite_rate = -1e99;
@@ -765,14 +781,16 @@ struct Bot {
                 if (halite <= 0) continue;
                 //if (ram_targets(pos) && DONT_MINE_RAM_TARGETS.get(false)) continue;
 
-                const int dist_from_me = grid.dist(pos, ship.pos);
+                //const int dist_from_me = grid.dist(pos, ship.pos);
+                const int dist_from_me = travel_time(pos);  // FIXME FIXME FIXME
 
                 // we can't pick a square that's already been picked
                 // unless we are closer than the current owner
                 const int owner_id = tgt_to_ship_id(pos);
                 if (owner_id != -1) {
                     const Ship owner = Game::me->id_to_ship.at(owner_id);
-                    const int dist_from_owner = grid.dist(pos, owner.pos);
+                    //const int dist_from_owner = grid.dist(pos, owner.pos);
+                    const int dist_from_owner = sid_to_travel_time.at(owner.id)(pos);  // FIXME FIXME FIXME
                     if (dist_from_owner <= dist_from_me) {
                         //Log::flog(ship, "can't pick %s b/c we aren't closer than %d", +pos.toString(), owner.id);
                         continue;
@@ -804,7 +822,7 @@ struct Bot {
                 const double turns_to_fill_up = halite_needed / mine_rate;
                 const double total_time = turns_to_fill_up 
                                         + dist_from_base 
-                                        + MINING_DIST_FROM_ME_MULT.get(2.0) * dist_from_me;  // TUNE. MINING_DIST_FROM_ME_MULT 1.0 is worse than 2.0, 3.0 about the same as 1.0
+                                        + MINING_DIST_FROM_ME_MULT.get(1.75) * dist_from_me;  // TUNE
                 double overall_halite_rate = halite_needed / total_time;
                 overall_halite_rate += return_richness_bonus(pos);
 //                if (Game::turn < 200 && ship.id == 1) Log::flog(pos, "overall_halite_rate = %f", overall_halite_rate);
@@ -831,6 +849,10 @@ struct Bot {
             const int ship_id = tgt_to_ship_id(tgt);
             if (ship_id == -1) continue;
             const Ship ship = Game::me->id_to_ship.at(ship_id);
+            if (ship.id == 2) {
+                //int color = min(255, 255 * grid(tgt).halite / 1000);
+                Log::flog_color(tgt, 255, 0, 0, "tgt of %d", ship.id);
+            }
 
             if (ship.pos == tgt) {
                 plan(ship, ship.pos, Purpose::Mine);

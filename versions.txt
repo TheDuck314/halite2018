@@ -212,8 +212,13 @@ v47 working upload of 36_predictor
 final rank=2 μ=98.76 σ=0.44
 
 v48 37_omega1
+final rank=2 μ=99.76 σ=0.84
 - don't send an explicit dropoff building ship, just wait for a returner to get there
 against 36_predictor: 2p:  830-758    4p:  812-779-786-726  (so basically noise)
 
+v49 38_aleph1
+- plan_mining uses bfs distance (account for impassable) instead of naive manhattan distance for dist_from_me in square scoring
+- MINING_DIST_FROM_ME_MULT 2.0 -> 1.75
+Against Omega_1:  2p:  105-74    4p:  137-94-91-58
 
 

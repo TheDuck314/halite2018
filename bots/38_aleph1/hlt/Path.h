@@ -16,4 +16,6 @@ class Path final
     // by moving along this route. Return a map of this route-halite-cost for every
     // possible destination square.
     static PosMap<int> build_halite_travel_cost_map(Vec src);
+
+    static PosMap<int> build_halite_travel_time_map(Vec src, const PosSet &blocked);
 };

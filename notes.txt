@@ -83,9 +83,15 @@ features
 
 ships are looking quite indecisive - DEBUG!
 
+Path::find appears to be completely broken and doesn't account for blocked!!
+
 we could jitter if the Predictor thinks a square is safe but then the PlayerAnalyzer thinks we'll get rammed?
 
+should prefer dropoff squares to have high halite on that exact square b/c it's cheaper/saves time later mining that halite
+
 it seems very possible that we have the wrong move-on mult in the late game when most stuff is mined out
+
+if we can't find a path to our mining target we sit still which is dumb
 
 nets to capture fleeing enemies in 2p would be super sweet
 

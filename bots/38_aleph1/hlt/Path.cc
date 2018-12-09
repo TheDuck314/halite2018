@@ -86,7 +86,7 @@ Direction Path::find(Vec src, Vec dest, const PosSet &blocked, const PosSet &pre
     }    
 
     // fancy search failed. Do a simple fallback thing.
-    return simple(src, dest, blocked);;
+    return simple(src, dest, blocked); 
 }
 
 
@@ -215,4 +215,39 @@ PosMap<int> Path::build_halite_travel_cost_map(Vec src)
     }
 
     return travel_cost;
+}
+
+struct TravelTimeQueueElem
+{
+    Vec pos;
+    int dist_so_far;
+};
+
+PosMap<int> Path::build_halite_travel_time_map(Vec src, const PosSet &blocked)
+{
+    PosMap<int> travel_time_map(9999);  // blocked squares will have cost 9999
+    PosMap<bool> finished(false);
+    deque<TravelTimeQueueElem> q;
+
+    q.push_back({src, 0});
+
+    while (!q.empty()) {
+        TravelTimeQueueElem e = q.front();
+        q.pop_front();
+
+        if (finished(e.pos)) continue;
+        travel_time_map(e.pos) = e.dist_so_far;
+        finished(e.pos) = true;
+
+        for (int d = 0; d < 4; ++d) {
+            Vec adj = grid.add(e.pos, (Direction)d);
+            if (finished(adj) || blocked(adj)) {
+                continue;
+            }
+            q.push_back({adj, e.dist_so_far + 1});
+        }
+    }    
+
+    // fancy search failed. Do a simple fallback thing.
+    return travel_time_map;
 }

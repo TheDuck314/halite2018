@@ -74,6 +74,7 @@ LOCAL_BOT_BINARIES = {
     "ChurchKleene":  "/home/greg/coding/halite/2018/repo/bots/35_churchkleene/build/MyBot",
     "Predictor":     with_predictor_path("/home/greg/coding/halite/2018/repo/bots/36_predictor/build/MyBot"),
     "Omega_1":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/37_omega1/build/MyBot"),
+    "Aleph_1":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/38_aleph1/build/MyBot"),
 }
 
 def get_ec2_dir(local_fn):
@@ -91,7 +92,7 @@ def get_bot_command(local_bot_command):
         parts = local_bot_command.split()
         parts[0] = local_filename_to_ec2(parts[0])
         for i in range(1, len(parts)):
-            if "=" in parts[i]:
+            if parts[i].startswith("PREDICTOR_MODEL="):
                 [key, val] = parts[i].split("=")
                 val = local_filename_to_ec2(val)
                 parts[i] = "=".join([key, val])
@@ -200,7 +201,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken33"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken34"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -385,12 +386,12 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Omega_1"]
-    ref_bot = "Predictor"
+    challenger_bots = ["Aleph_1"]
+    ref_bot = "Omega_1"
     """
-    challenger_base = "ChurchKleene"
-    param = "MIN_HALITE_PER_SHIP_TO_SPAWN_4P"
-    values = [1000, 1500, 1750, 1999, 2250, 2500, 3000, 2000]
+    challenger_base = "Aleph_1"
+    param = "MINING_DIST_FROM_ME_MULT"
+    values = [1.0, 1.25, 1.5, 1.75, 2.0]
 #    param = "SHIPS_PER_LATER_DROPOFF"
 #    values = [16, 18, 20, 22, 24]
     challenger_bots = []
