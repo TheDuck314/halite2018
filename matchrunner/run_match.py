@@ -75,6 +75,8 @@ LOCAL_BOT_BINARIES = {
     "Predictor":     with_predictor_path("/home/greg/coding/halite/2018/repo/bots/36_predictor/build/MyBot"),
     "Omega_1":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/37_omega1/build/MyBot"),
     "Aleph_1":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/38_aleph1/build/MyBot"),
+    "Aleph_2":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/39_aleph2/build/MyBot"),
+    "Aleph_3":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/40_aleph3/build/MyBot"),
 }
 
 def get_ec2_dir(local_fn):
@@ -201,7 +203,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken34"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken35"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -386,12 +388,14 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Aleph_1"]
-    ref_bot = "Omega_1"
+    challenger_bots = ["Aleph_3"]
+    ref_bot = "Aleph_2"
     """
-    challenger_base = "Aleph_1"
-    param = "MINING_DIST_FROM_ME_MULT"
-    values = [1.0, 1.25, 1.5, 1.75, 2.0]
+    challenger_base = "Aleph_3"
+    param = "MINE_MOVE_ON_MULT"
+    values = [2.5, 3.0]
+#    values = [2.0, 2.25, 2.5, 2.75, 3.5, 3.0]
+#    values = [1.5, 1.75, 2.0, 2.25, 2.5, 3.0]
 #    param = "SHIPS_PER_LATER_DROPOFF"
 #    values = [16, 18, 20, 22, 24]
     challenger_bots = []

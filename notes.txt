@@ -81,6 +81,17 @@ features
   - well, maybe we can! maybe just combine probabilities of different opponents going there in a naive way
 - also possible: train an opponent-recognizer and then use it to switch between safety networks somehow
 
+
+which stage of the game does this come from??
+                          Aleph_3.MINE_MOVE_ON_MULT=1.5    2p:   0- 0    4p:  27-18-19-18
+                         Aleph_3.MINE_MOVE_ON_MULT=1.75    2p:   0- 0    4p:  27-19-18-18
+                          Aleph_3.MINE_MOVE_ON_MULT=2.0    2p:   0- 0    4p:  30-21-14-16
+                         Aleph_3.MINE_MOVE_ON_MULT=2.25    2p:   0- 0    4p:  38-18-16- 9
+                          Aleph_3.MINE_MOVE_ON_MULT=2.5    2p:   0- 0    4p:  27-21-20-13
+                          Aleph_3.MINE_MOVE_ON_MULT=3.0    2p:   0- 0    4p:  258-310-320-333
+
+if the target square is abnormally rich and we won't fill up, we should use a higher move on mult 
+
 performance: cache all the plan_mining square scores since they don't change on the second pass
 
 teccles is pretty good about popping a dropoff into the center very early in 32x32 4p
@@ -100,6 +111,10 @@ it seems very possible that we have the wrong move-on mult in the late game when
 if we can't find a path to our mining target we sit still which is dumb
 
 nets to capture fleeing enemies in 2p would be super sweet
+
+should start ramming earlier in 4p if it's super good
+
+I have a lot more dropped than teccles in 4p -- need more paranoid fleeing, probably!
 
 MAKE A TOOL TO ANALYZE WHETHER WE'RE BUILDING THE RIGHT NUMBER OF SHIPS
 ALSO TRY TUNING THE STOP CONDITION ON A PER-MAP-SIZE BASIS, SINCE PROBABLY 4P 32X32 AT LEAST NEEDS A DIFFERENT CONDITION

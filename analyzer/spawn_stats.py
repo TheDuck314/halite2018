@@ -76,7 +76,8 @@ def main():
 #        print(game_fn)
         stats = analyze_one_game(game_fn)
         ratio = (stats.final_profit - stats.profit_at_last_spawn_turn - stats.carried_at_last_spawn_turn) / stats.ships_at_last_spawn_turn
-        if stats.map_size == 64 and stats.num_players == 4:
+#        if stats.map_size == 64 and stats.num_players == 4:
+        if stats.num_players == 4:
             print("{} ratio = {:.1f}    {}".format(bn, ratio, stats))
 
 if __name__ == "__main__":
