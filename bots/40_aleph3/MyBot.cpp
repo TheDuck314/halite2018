@@ -872,7 +872,7 @@ struct Bot {
                 // TODO: optimal value probably depends on phase of game??
                 // does it depend on how far away the target is??
                 const double move_on_mult = Game::num_players == 2 ? MINE_MOVE_ON_MULT.get(3.0)
-                                                                   : MINE_MOVE_ON_MULT.get(2.5);
+                                                                   : MINE_MOVE_ON_MULT.get(3.0);
                 bool should_move = tgt_eff_halite > move_on_mult * here_eff_halite;  // TUNE
 
                 // tune the factor here

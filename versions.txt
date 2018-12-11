@@ -230,6 +230,7 @@ final rank=2 μ=99.68 σ=0.31
 - remove the buggy incomplete final collapse blocking
 
 v51 40_aleph3
+final rank=2 μ=98.19 σ=0.45
 - MINE_MOVE_ON_MULT in 4p 3.0 -> 2.5. Looks before for 4p but slightly worse for 2p
   one test:     182-131-110-99
   another test: 114-92-70-78
