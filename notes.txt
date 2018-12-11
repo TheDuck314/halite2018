@@ -83,6 +83,8 @@ features
 
 performance: cache all the plan_mining square scores since they don't change on the second pass
 
+teccles is pretty good about popping a dropoff into the center very early in 32x32 4p
+
 SWITCH DIST FROM BASE TO BE BFS!!
 
 returners pushing off miners is dumb
