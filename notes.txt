@@ -1,47 +1,3 @@
-32x32 only, SHIPS_PER_LATER_DROPOFF fixed at 20
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=11    2p:  62-66    4p:  96-76-48-39
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=13    2p:  72-56    4p:  90-72-51-45
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=15    2p:  69-58    4p:  84-61-61-52
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=19    2p:  63-65    4p:  57-63-74-65
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=21    2p:  62-65    4p:  68-61-61-68
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=17    2p:  310-328    4p:  897-959-997-1023
-and
-                   LargeVeblen.SHIPS_FOR_FIRST_DROPFF=7    2p:  66-123    4p:  94-58-58-160
-                   LargeVeblen.SHIPS_FOR_FIRST_DROPFF=9    2p:  97-91    4p:  142-67-53-108
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=11    2p:  92-96    4p:  147-75-60-88
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=13    2p:  96-93    4p:  122-103-73-72
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=17    2p:  403-351    4p:  975-1177-1236-1052
-
-40x40 only, SHIPS_PER_LATER_DROPOFF fixed at 20
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=11    2p:   0- 0    4p:  103-47-35-36
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=13    2p:   0- 0    4p:  82-48-51-40
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=15    2p:   0- 0    4p:  82-47-47-44
-                  LargeVeblen.SHIPS_FOR_FIRST_DROPFF=17    2p:   0- 0    4p:  67-52-60-42
-
-48x48 only, SHIPS_PER_LATER_DROPOFF fixed at 20
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=11    2p:  81-68    4p:  93-71-55-59
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=13    2p:  76-73    4p:  95-74-54-55
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=15    2p:  70-78    4p:  87-69-50-72
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=17    2p:  84-65    4p:  71-75-72-60
-                                            SmallVeblen    2p:  284-311    4p:  766-823-881-866
-
-56x56 only, SHIPS_PER_LATER_DROPOFF fixed at 20
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=11    2p:  28-29    4p:  42-28-25-25
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=13    2p:  34-23    4p:  35-29-32-24
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=15    2p:  32-25    4p:  46-29-31-14
-                 LargeVeblen.SHIPS_FOR_FIRST_DROPOFF=17    2p:  23-34    4p:  34-34-23-29
-                                            SmallVeblen    2p:  111-117    4p:  323-360-369-388
-
-
-
-64x64 only SHIPS_FOR_FIRST_DROPFF fixed at 17
-MUSTDO IMPLEMENT THIS
-                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=16    2p:  83-109    4p:  120-94-104-89
-                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=18    2p:  87-105    4p:  119-100-104-84
-                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=20    2p:  84-108    4p:  98-108-92-109
-                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=22    2p:  94-98    4p:  95-106-92-114
-                 LargeVeblen.SHIPS_PER_LATER_DROPOFF=24    2p:  97-95    4p:  90-95-113-109
-
 
 32x32 only
       ChurchKleene.MIN_HALITE_PER_SHIP_TO_SPAWN_4P=1500    2p:   0- 0    4p:  228-243-197-252
@@ -90,6 +46,13 @@ which stage of the game does this come from??
                           Aleph_3.MINE_MOVE_ON_MULT=2.5    2p:   0- 0    4p:  27-21-20-13
                           Aleph_3.MINE_MOVE_ON_MULT=3.0    2p:   0- 0    4p:  258-310-320-333
 
+comparing some stats to teccles:
+ - he gets more inspiration in 2p
+ - he has a lot less dropped halite in 2p and 4p
+ - he builds a similar number of ships on 32x32 (maybe more than me on 32x32 2p) but substantially fewer on bigger maps, in both 4p and 2p
+ - he is better at not having final carried halite
+ - he builds substantially more dropoffs on both 2p and 4p at all map sizes
+
 if the target square is abnormally rich and we won't fill up, we should use a higher move on mult 
 
 performance: cache all the plan_mining square scores since they don't change on the second pass
@@ -105,6 +68,8 @@ ships are looking quite indecisive - DEBUG!
 we could jitter if the Predictor thinks a square is safe but then the PlayerAnalyzer thinks we'll get rammed?
 
 should prefer dropoff squares to have high halite on that exact square b/c it's cheaper/saves time later mining that halite
+
+reCurs3 seems to get a lot more inspiration than me in the 4p endgame -- figure out how
 
 it seems very possible that we have the wrong move-on mult in the late game when most stuff is mined out
 

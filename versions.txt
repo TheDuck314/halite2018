@@ -236,4 +236,5 @@ final rank=2 μ=98.19 σ=0.45
   another test: 114-92-70-78
   (just did the change for 4p)
 
-
+v52 40_aleph3
+revert previous change: MINE_MOVE_ON_MULT in 4p back to 3.0, since live results were poor
