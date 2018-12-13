@@ -16,6 +16,8 @@ Predictor::Predictor(PredictorDataCollector &_collector, const string &model_fn)
 
 void Predictor::predict(map<Vec, double> &safety_map)
 {
+    safety_map.clear();
+
     const vector<PredictorDataCollector::HalfInstance> &raw_inputs = collector.get_available_inputs();
     const size_t batch_size = raw_inputs.size();
     if (raw_inputs.empty()) return;
@@ -45,8 +47,6 @@ void Predictor::predict(map<Vec, double> &safety_map)
     //outss << output;
     //Log::log("outss = %s", +outss.str());
     
-    safety_map.clear();
-
     for (unsigned i = 0; i < batch_size; ++i) {
         const Vec pos = raw_inputs[i].pos;
         const float safety = output[i].item<float>();

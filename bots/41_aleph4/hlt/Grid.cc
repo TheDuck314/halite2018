@@ -1,6 +1,9 @@
 #include "Grid.h"
 #include "Log.h"
 
+#include <algorithm>
+using namespace std;
+
 Grid grid;
 
 void Grid::resize(int _width, int _height)
@@ -170,6 +173,25 @@ double Grid::average_dist(Vec src, const vector<Ship> &ships) const
     }
     return total_dist / (double) ships.size();
 }
+
+double Grid::average_dist_to_closest_n(Vec src, const vector<Ship> &ships, unsigned N) const
+{
+    if (ships.empty()) return 9999;
+    vector<int> distances(ships.size());
+    for (unsigned i = 0; i < ships.size(); ++i) {
+        distances[i] = dist(src, ships[i].pos);
+    }
+    std::sort(distances.begin(), distances.end());
+    if (N > distances.size()) {
+        N = distances.size();
+    }
+    int total_dist = 0;
+    for (unsigned i = 0; i < N; ++i) {
+        total_dist += distances[i];
+    }
+    return total_dist / (double) N;
+}
+
 
 Vec Grid::add(Vec pos, Direction dir) const
 {

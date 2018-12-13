@@ -238,3 +238,18 @@ final rank=2 μ=98.19 σ=0.45
 
 v52 40_aleph3
 revert previous change: MINE_MOVE_ON_MULT in 4p back to 3.0, since live results were poor
+
+v53 41_aleph4
+- bugfix where safety_map is now cleared even if there's nothing to predict this turn (backported this to 40_aleph3). should rare affect anything
+various dropoff tweaks:
+- min dist between our dropoff and enemy structure 5 -> 4
+- instead of forbidding
+    (dist_to_enemy_shipyard < dist_to_allied_structure)
+  require
+    (dist_to_enemy_shipyard + 4 < dist_to_allied_structure)
+  which lets us push our dropoffs slightly into "enemy territory"
+- In 4p, heavily penalize locations that don't have at least 3 enemy ships within radius 13.
+  This last bit has suprisingly little effect locally but maybe will fix losing in live by building a 
+  dropoff where we'll never get inspiration.
+Overall this whole thing is a wash locally: 2p:  163-169    4p:  163-163-141-185
+

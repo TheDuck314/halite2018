@@ -39,6 +39,7 @@ class Grid final
     int num_within_dist(Vec src, const vector<Ship> &ships, int R) const;
 
     double average_dist(Vec src, const vector<Ship> &ships) const;
+    double average_dist_to_closest_n(Vec src, const vector<Ship> &ships, unsigned N) const;
 
     Vec add(Vec pos, Direction dir) const;
     Vec add(Vec pos, int dx, int dy) const;

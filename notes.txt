@@ -19,6 +19,11 @@
 
 https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip
 
+reasons for 4p losses:
+- not building any dropoffs on 48x48 low halite map, and also too much dropped halite https://halite.io/play/?game_id=3007888
+- only ever building 1 dropoff on 64x64! also, 1st dropoff delayed by getting rammed https://halite.io/play/?game_id=3000521
+
+
 
 features
 - can_move
@@ -132,21 +137,6 @@ I think teccles's unsafe moves can mostly be explained if we assume he
 - also when his returners get in a tight spot they possibly violate this
 
 I think teccles possibly has a fear of low-halite ships that deliberately move next to one of his ships
-
-recent reasons for 2p losses:
-- against teccles: either making a bad dropoff far away, or not actually sending any ships to it b/c we're chasing inspiration: https://halite.io/play/?game_id=2598374
-
-reasons for 4p losses:
-- many awful dropoff decisions: https://halite.io/play/?game_id=2598294
-- useless dropoff in 32x32 4p? https://halite.io/play/?game_id=2598446
-- still losing from clearly bad far-away dropoffs: https://halite.io/play/?game_id=2632430
-- again, teccles builds a close dropoff and gets fast inspiration, I build a far dropoff and get nothing https://halite.io/play/?game_id=2638745
-- here's a game I SHOULD have lost for building a far dropoff: https://halite.io/play/?game_id=2639350
-- I almost lose this one against recurse b/c I try to use a dropoff that his ships have surrounded https://halite.io/play/?game_id=2638597
-
-- didn't build enough ships! on 32x32 against recurse: https://halite.io/play/?game_id=2633128
-  again! against teccles and siesta: https://halite.io/play/?game_id=2633322
-  didn't build enough ships on 40x40 against cdurbin & recurse: https://halite.io/play/?game_id=2638969
 
 Returners shouldn't path around other returners unless the other returners aren't moving. Motivation is my ship 12 in https://halite.io/play/?game_id=2627576
 

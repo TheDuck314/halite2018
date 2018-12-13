@@ -28,7 +28,7 @@ PARAM(double, MINING_DIST_FROM_ME_MULT);
 PARAM(double, MIN_HALITE_PER_SHIP_TO_SPAWN_4P);
 PARAM(double, DROPOFF_MIN_NEW_HALITE_IN_RADIUS);
 PARAM(double, ENEMY_SHIP_HALITE_FRAC);
-PARAM(double, DROPOFF_PENALTY_FRAC_PER_DIST);
+PARAM(double, DROPOFF_FAR_FROM_ENEMIES_FACTOR);
 PARAM(double, MINING_INSPIRATION_MULT_2P);
 PARAM(double, MINING_INSPIRATION_MULT_4P);
 PARAM(double, DROPOFF_ENEMY_BASE_DIST_BONUS_MAX);
@@ -858,7 +858,7 @@ struct Bot {
             const Ship ship = Game::me->id_to_ship.at(ship_id);
             if (ship.id == 2) {
                 //int color = min(255, 255 * grid(tgt).halite / 1000);
-                Log::flog_color(tgt, 255, 0, 0, "tgt of %d", ship.id);
+                Log::flog_color(tgt, 255, 255, 0, "tgt of %d", ship.id);
             }
 
             if (ship.pos == tgt) {
@@ -952,13 +952,13 @@ struct Bot {
                 if (dist_to_enemy_structure <= dist_to_allied_structure && dist_to_enemy_ship < 20) continue;  // TUNE
             } else {
                 // much more relaxed condition:
-                if (dist_to_enemy_structure <= 4) continue;  // TUNE
+                if (dist_to_enemy_structure <= 3) continue;  // TUNE
             }
 
             if (DONT_BUILD_NEAR_ENEMY_SHIPYARDS.get(true)) {
                 // don't build at a spot that's closer to an enemy SHIPYARD than it is to
                 // any of our structures.
-                if (dist_to_enemy_shipyard < dist_to_allied_structure) {
+                if (dist_to_enemy_shipyard + 4 < dist_to_allied_structure) {
                     continue;  // TUNE?
                 }
             }
@@ -989,11 +989,25 @@ struct Bot {
 
             const double avg_ship_dist = grid.average_dist(pos, Game::me->ships);
             const double ship_dist_factor = exp(-DROPOFF_SHIP_DIST_PENALTY.get(0.02) * avg_ship_dist);
+            //if (Game::turn < 400) Log::flog_color(pos, 0, (int)(255*ship_dist_factor), 0, "N=%d avg_ship_dist=%f", num_allied_ships_to_look_at, avg_ship_dist);
+
+            // In 4p it's folly to set up a dropoff in a region where we won't get any inspiration
+            // Let's heavily penalize squares far from enemy ships
+            // This doesn't do anything in local tests, probably because the local opponents will
+            // move to place dropoffs in whatever region we were going to anyway, so we'll always
+            // think the usual dropoff spot will be inspired.
+            double enemy_dist_factor = 1.0;
+            if (Game::num_players != 2) {
+                const int enemy_R = 13;
+                const int num_enemies_in_R = grid.num_within_dist(pos, Game::enemy_ships, enemy_R);
+                enemy_dist_factor = num_enemies_in_R < 3 ? DROPOFF_FAR_FROM_ENEMIES_FACTOR.get(0.1) : 1.0;
+                //if (Game::turn < 400) Log::flog_color(pos, 0, (int)(255*enemy_dist_factor), 0, "enemy_dist_factor = %f", enemy_dist_factor);
+            }
 
             /*const int dist_to_closest_enemy = grid.smallest_dist(pos, Game::enemy_ships);
             const double enemy_dist_factor = exp(-DROPOFF_ENEMY_DIST_PENALTY.get(0.02) * max(7, dist_to_closest_enemy));*/
 
-            double score = new_halite_in_radius * ship_dist_factor;
+            double score = new_halite_in_radius * ship_dist_factor * enemy_dist_factor;
             /*if (Game::turn < 200) {
                 Log::flog(pos, "score = %f", score);
                 Log::flog(pos, "ship_dist_factor = %f", ship_dist_factor);

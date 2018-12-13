@@ -77,6 +77,7 @@ LOCAL_BOT_BINARIES = {
     "Aleph_1":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/38_aleph1/build/MyBot"),
     "Aleph_2":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/39_aleph2/build/MyBot"),
     "Aleph_3":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/40_aleph3/build/MyBot"),
+    "Aleph_4":       with_predictor_path("/home/greg/coding/halite/2018/repo/bots/41_aleph4/build/MyBot"),
 }
 
 def get_ec2_dir(local_fn):
@@ -203,7 +204,7 @@ def get_num_players(force_player_count):
 
 
 EC2_KEYPAIR_FN = "/home/greg/coding/halite/2018/ec2/awskeypair1.pem"
-EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken35"  # submitting another request won't do anything unless you increment this token
+EC2_SPOT_REQUEST_TOKEN = "SpotRequestClientToken37"  # submitting another request won't do anything unless you increment this token
 EC2_INSTANCE_DNS_NAME = None
 
 def get_spot_requests():
@@ -321,7 +322,18 @@ def run_script_on_ec2(local_script_fn):
 
 def install_torch_on_ec2():
     print "Installing torch on ec2."
-    run_script_on_ec2("/home/greg/coding/halite/2018/repo/matchrunner/install_torch_on_ec2.sh")
+    #run_script_on_ec2("/home/greg/coding/halite/2018/repo/matchrunner/install_torch_on_ec2.sh")
+    src = "/home/greg/coding/halite/2018/libtorch/libtorch/"
+    dest = "/home/ec2-user/libtorch/"
+    cmd = [
+        "rsync",
+        "-r",
+        "-e", "ssh -i {}".format(EC2_KEYPAIR_FN),
+        src,
+        "{}:{}".format(EC2_INSTANCE_DNS_NAME, dest)
+    ]
+    print "DOING RSYNC:    {}".format(" ".join(cmd))
+    subprocess.check_output(cmd)
     print "Dpne installing torch on ec2."
 
 def kill_ec2_bot_processes():
@@ -388,12 +400,13 @@ def main():
 
     bot_to_command = LOCAL_BOT_BINARIES.copy()
 
-    challenger_bots = ["Aleph_3"]
-    ref_bot = "Aleph_2"
+    challenger_bots = ["Aleph_4"]
+    ref_bot = "Aleph_3"
     """
-    challenger_base = "Aleph_3"
-    param = "MINE_MOVE_ON_MULT"
-    values = [2.5, 3.0]
+    challenger_base = "Aleph_4"
+    param = "DROPOFF_SHIP_DIST_PENALTY"
+    values = [0.06, 0.04]
+#    values = [2.5, 3.0]
 #    values = [2.0, 2.25, 2.5, 2.75, 3.5, 3.0]
 #    values = [1.5, 1.75, 2.0, 2.25, 2.5, 3.0]
 #    param = "SHIPS_PER_LATER_DROPOFF"
@@ -405,8 +418,8 @@ def main():
         challenger_bots.append(challenger_bot)
         bot_to_command[challenger_bot] = bot_to_command[challenger_base] + " " + override
 
-    ref_bot = challenger_bots.pop()
-    #ref_bot = "SmallVeblen"
+    #ref_bot = challenger_bots.pop()
+    ref_bot = "Aleph_3"
     """
 
     bots = challenger_bots + [ref_bot]
