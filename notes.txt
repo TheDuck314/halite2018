@@ -19,10 +19,26 @@
 
 https://download.pytorch.org/libtorch/nightly/cpu/libtorch-shared-with-deps-latest.zip
 
+GOOD IDEA 1: bonus for mining closer to enemy's structures than mine, to deny them halite and preserve stuff I'll probably get anyway
+GOOD IDEA 2: in 2p, have a bonus for being near the "action" which probably means places with lots of my ships and enemy ships in
+             close proximity
+FUN IDEA: when the shipyard is going full tilt, make returning to the shipyard strongly dispreferred
+          try it on this seed https://halite.io/play/?game_id=3063623
+
+we can surely be way more aggressive in very late 4p, like just use the 2p we_win_fight function
+
+debug why I don't build more dropoffs here
+https://halite.io/play/?game_id=3061927
+also check why i have so many collisions
+
 reasons for 4p losses:
 - not building any dropoffs on 48x48 low halite map, and also too much dropped halite https://halite.io/play/?game_id=3007888
 - only ever building 1 dropoff on 64x64! also, 1st dropoff delayed by getting rammed https://halite.io/play/?game_id=3000521
+- too many ships??
+- just inferior late-game mining, somehow https://halite.io/play/?game_id=3058766
 
+teccles always seems to push aggressively forward past the "centerline" between him and his opponent, reserving more halite for himself
+try this!
 
 
 features
