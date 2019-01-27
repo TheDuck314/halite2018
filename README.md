@@ -8,6 +8,8 @@ All the strategy is in `bots/41_aleph4/MyBot.cpp`, and supporting code is in `bo
 
 Below is a brief post-mortem with a discussion of the history of my bot, my process for working on it, and some details about how the various systems work.
 
+[This forum post](https://forums.halite.io/t/collection-of-post-mortems-bot-source-code/1335) has many other Halite 3 bots and postmortems.
+
 ## History
 
 I started with the python starter kit. After a few days my bot started getting slow, so I rewrote everything from scratch in C++, this time not using a starter kit. Switching to a compiled language was definitely a great move, since it let me worry much less about optimization, and let me run test games faster.
@@ -20,7 +22,7 @@ I pulled ahead of Rachol and into clear #1 mostly by adding combat. In 2p, I was
 
 Around this time I also started thinking about collision avoidance in 4p, which I think is a pretty deep problem. I wrote some code to exploit very-cautious opponents in 4p, which I talk about a bit more below. This was a small boost.
 
-All this got me to about 94-95 mu, around the second week of November. At this point I probably had my biggest lead over #2. From this point on I found it much harder to find improvements and they were all incremental changes to the existing systems. Teccles soon caught up and surpassed me and eventually so did a bunch of others.
+All this got me to about 94-95 mu, around the second week of November. At this point I probably had my biggest lead over #2. From this point on I found it much harder to find improvements and they were all incremental changes to the existing systems. [Teccles](https://github.com/teccles-halite/halite3-bot) soon caught up and surpassed me and eventually so did a bunch of others.
 
 ## Process
 
