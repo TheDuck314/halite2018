@@ -28,6 +28,8 @@ fohristiwhirl's [flourine](https://github.com/fohristiwhirl/fluorine) replay vie
 
 My process for finding improvements was a combination of close analysis of replays in fluorine to find things I could be doing better, and running large batches of self-play games on a spot AWS c5.18xlarge instance to test changes. I only committed changes that looked clearly better in self-play, or were even in self-play and I had a strong belief would help against real opponents online.
 
+To determine the replays to analyze, I had a script that would download my online games and make a table of my losses categorized by 2p vs 4p/opponent/map size, and sorted by `(winner halite) / (my halite)`. Then I would look at the worst losses.
+
 ## Bot details
 
 For anyone interested, here are details of how the various systems worked in my bot. You can also try reading `bots/41_aleph4/MyBot.cpp` itself; it is not very clean but I tend to write lots of comments explaining to myself how each piece of code is going to work, so it might be possible to make sense of it.
@@ -122,10 +124,14 @@ This is better but it still doesn't fix the problem that we get exploited by alw
 
 This neural net idea was great fun to implement but seemed to have basically no impact on mu. Probably with some more work it could have been a net positive. It did make me more aggressive about playing "move" sometimes, so it probably did make my bot harder to exploit.
 
-### General thoughts
+### Thoughts on the competition
 
-- The organizers did a great job of running the competition. The website and matchmaking server worked great.
+The organizers did a great job of running the competition. The game was cleverly designed and fun to play, the website and matchmaking server worked great, and the organizers were very responsive and helpful. I do have some thoughts about how a Halite 4 could be even better:
 
 - Halite 3 games can be hard to make sense of, because the final halite score arises from thousands of little decisions over the course of the game and it can be very hard to see what decisions gave an advantage to one bot over another. I found this a bit frustrating.
 
+- I wish the game had been a bit richer in terms of allowing for more diverse strategies and a real metagame. Halite 3's simple rules are kind of elegant, but a lot of games come down to how well you can execute the single basic strategy of "mine a lot of halite really fast". There was a bit of a metagame around things like combat, dropoff blocking, and 4p collision avoidance, but these are kind of overshadowed by the mining game.
+
 - I wouldn't mind a shorter competition; I ran out of ideas well before the end of the competition. And ideally Halite wouldn't overlap with [Battlecode](http://battlecode.org/) since plenty of people are interested in both games.
+
+A lot of what makes a competition like this fun is the community of players -- I really enjoyed hanging out in the [discord](https://discordapp.com/invite/rbVDB4n). I also made great use of [mlomb's stats site](https://halite2018.mlomb.me/), especially the historical mu graphs.
