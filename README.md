@@ -62,7 +62,7 @@ To estimate the time to fill up from mining, we assume all nearby squares have a
     mining rate = (fudge factor) * (target square halite) / 4
     estimate of time to fill up from mining = [1000 - (ship halite)] / (mining rate)
 
-A couple extra things: just using this formula the ships were way too eager to abandon the current square for a nearby richer square. So I multiplied `distance from square to dropoff` by a fudge factor of 1.75, and also added a rule: stay on the current square unless the target square has more than 3x the halite of the current square.
+A couple extra things: just using this formula the ships were way too eager to abandon the current square for a nearby richer square. So I multiplied `distance to square` by a fudge factor of 1.75, and also added a rule: stay on the current square unless the target square has more than 3x the halite of the current square.
 
 This is pretty simple but works well. At one point I spent quite a bit of effort trying to think of a way to do more sophisticated planning, where for example we would explicitly model the whole trip and search over possible mining paths to find the fastest one. But I didn't come up with anything good.
 
