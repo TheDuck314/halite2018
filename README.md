@@ -90,7 +90,7 @@ Dropoff planning code is in `consider_making_dropoff()`.
 
 My general principle for 2p combat was that we should like collisions when we have a local numbers advantage, since once all the collisions happen we will have some ships left over to pick up all the halite dropped on the ground.
 
-So for each square I computed `(allied ships within radius 8) - (enemy ships within radius 8)`. When this score was positive I didn't mind collisions, and actively tried to ram higher-halite ships with lower-halite ships. When this score was negative I avoided moving adjacent to enemies and if I was adjacent to an enemy I assumed the enemy would ram and tried to run away.
+So for each square that was occupied by or adjacent to an enemy I computed `(allied ships within radius 8) - (enemy ships within radius 8)`. When this score was positive I didn't mind collisions on that square, and actively tried to ram higher-halite ships with lower-halite ships. When this score was negative I avoided moving to the square and if I was already on the square I assumed the enemy would ram and tried to run away.
 
 I initial started with a radius much smaller than 8 but got big self-play improvements by expanding the radius to 8.
 
