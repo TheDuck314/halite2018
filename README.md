@@ -139,4 +139,4 @@ The organizers did a great job of running the competition. The game was cleverly
 
 - I wouldn't mind a shorter competition; I ran out of ideas well before the end of the competition. And ideally Halite wouldn't overlap with [Battlecode](http://battlecode.org/) since plenty of people are interested in both games.
 
-A lot of what makes a competition like this fun is the community of players -- I really enjoyed hanging out in the [discord](https://discordapp.com/invite/rbVDB4n). I also made great use of [mlomb's stats site](https://halite2018.mlomb.me/), especially the historical mu graphs.
+A lot of what makes a competition like this fun is the community of players -- I really enjoyed hanging out in the [discord](https://discordapp.com/invite/rbVDB4n). I also made frequent use of [mlomb's stats site](https://halite2018.mlomb.me/), especially the historical mu graphs.
