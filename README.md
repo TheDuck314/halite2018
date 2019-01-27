@@ -105,7 +105,7 @@ Combat is handled by a combination of `set_impassable()`, `consider_ramming()`, 
 
 ### 4p collision avoidance
 
-During the 4p early and midgame there is a subtle minigame that is played over and over which is easy to miss but which can be pretty consequential. Suppose you have a low-halite ship next to an empty high-halite square. An enemy also has a low-halite ship next to the same high-halite square. Should you move onto the square to mine it?
+In 4p there is a subtle minigame that is played over and over which is easy to miss but which can be pretty consequential. Suppose you have a low-halite ship next to an empty high-halite square. An enemy also has a low-halite ship next to the same high-halite square. Should you move onto the square to mine it?
 
 - If you move on the square and the enemy ship stays where it is, you get to mine the square and get a nice bit of halite.
 - If you stay and the enemy moves, the enemy gets the halite instead.
