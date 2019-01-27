@@ -1,6 +1,6 @@
 # halite2018
 
-This is my entry for Halite 3: https://halite.io/ . My final uploaded version is in bots/41_aleph4 and will probably finish 6th.
+This is my entry for [Halite 3](https://halite.io/). My final uploaded version is in bots/41_aleph4 and will probably finish 6th.
 
 `versions.txt` has brief notes on the changes in each uploaded version and also the mu of most versions. 
 
