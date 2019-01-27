@@ -51,7 +51,7 @@ Traffic control is handled in `resolve_plans_into_commands()`.
 
 ### Mining
 
-Mining is most important part of any bot. The idea is pretty simple: every miner scores every square on the map, and sets its destination to be the square with the best score. If two miners pick the same square, the one who is closer wins and the other one has to pick a different square.
+Mining is the most important part of any bot. The idea is pretty simple: every miner scores every square on the map, and sets its destination to be the square with the best score. If two miners pick the same square, the one who is closer wins and the other one has to pick a different square.
 
 The score for a square is an estimate of how many turns it would take to travel to that square, mine halite in that area until full, and then return to the nearest dropoff. So the lowest score is best because that means we'll deliver a full load of halite as fast as possible. The estimate of total trip time is
 
