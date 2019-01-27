@@ -86,7 +86,7 @@ I think dropoff logic is one place where my bot could have used a lot more work.
 
 Dropoff planning code is in `consider_making_dropoff()`. 
 
-### 2p Combat
+### Combat
 
 My general principle for 2p combat was that we should like collisions when we have a local numbers advantage, since once all the collisions happen we will have some ships left over to pick up all the halite dropped on the ground.
 
@@ -96,9 +96,14 @@ I initial started with a radius much smaller than 8 but got big self-play improv
 
 I eventually added some tweaks to this to discourage ramming my high-halite ships into enemy low-halite ships, but for a long time I was perfectly happy to ram an 800 ship into a 100 ship if I had a local numbers advantage.
 
-2p (and 4p) combat is handled by a combination of `set_impassable()`, `consider_ramming()`, and `consider_fleeing()`. 
+4p combat follows the same principles except:
+- we only start ramming late in the game, since early in the game it's probably better to keep our ships alive
+- the conditions for ramming are stricter
+- we are much less likely to actively run away from enemy ships
 
-### 4p Combat and collision avoidance
+Combat is handled by a combination of `set_impassable()`, `consider_ramming()`, and `consider_fleeing()`. 
+
+### 4p collision avoidance
 
 During the 4p early and midgame there is a subtle minigame that is played over and over which is easy to miss but which can be pretty consequential. Suppose you have a low-halite ship next to an empty high-halite square. An enemy also has a low-halite ship next to the same high-halite square. Should you move onto the square to mine it?
 
