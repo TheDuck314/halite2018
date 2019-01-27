@@ -129,7 +129,7 @@ This is better but it still doesn't fix the problem that we get exploited by alw
 
 This neural net idea was great fun to implement but seemed to have basically no impact on mu. Probably with some more work it could have been a net positive. It did make me more aggressive about playing "move" sometimes, so it probably did make my bot harder to exploit.
 
-### Thoughts on the competition
+## Thoughts on the competition
 
 The organizers did a great job of running the competition. The game was cleverly designed and fun to play, the website and matchmaking server worked great, and the organizers were very responsive and helpful. I do have some thoughts about how a Halite 4 could be even better:
 
