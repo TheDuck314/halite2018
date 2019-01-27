@@ -37,11 +37,11 @@ For anyone interested, here are details of how the various systems worked in my 
 ### Traffic control
 
 The main strategy code determines a "purpose" and "destination" for every ship. Then the traffic control system decides which move each ship will make. The possible purposes are
-1. **Mine**: go to a destination square and mine it)
-2. **Return**: bring halite back to a dropoff)
-3. **Flee**: run away from an enemy who we think might ram us)
-4. **Ram**: try to collide with an adjacent enemy)
-5. **Stuck**: for ships that don't have enough halite to move)
+1. **Mine**: go to a destination square and mine it
+2. **Return**: bring halite back to a dropoff
+3. **Flee**: run away from an enemy who we think might ram us
+4. **Ram**: try to collide with an adjacent enemy
+5. **Stuck**: for ships that don't have enough halite to move
 
 We go through ships one by one and find paths to their destination. When two ships plan to move onto the same square the one with the higher-number "purpose" gets priority and the other one has to re-route.
 
