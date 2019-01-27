@@ -45,7 +45,7 @@ The main strategy code determines a "purpose" and "destination" for every ship. 
 
 We go through ships one by one and find paths to their destination. When two ships plan to move onto the same square the one with the higher-number "purpose" gets priority and the other one has to re-route.
 
-There's a special case where if a Miner wants to stay still, but a Returner wants to move onto the miner's square, the Miner is forced to swap with the Returner. This is pretty effective at preventing traffic jams around dropoffs.
+There's a special case where if a Miner wants to stay still, but a Returner wants to move onto the miner's square, the Miner is forced to swap positions with the Returner. This is pretty effective at preventing traffic jams around dropoffs.
 
 Traffic control is handled in `resolve_plans_into_commands()`.
 
